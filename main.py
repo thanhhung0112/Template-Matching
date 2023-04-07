@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from proposal_box import *
+from utils import *
 from proposal_box_improve import proposal_roi
 from match_template import match_template
 from non_max_suppression import non_max_suppression_fast

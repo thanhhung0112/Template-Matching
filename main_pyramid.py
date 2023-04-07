@@ -6,7 +6,6 @@ import matplotlib.patches as patches
 from rotate_template import rotate_template
 from non_max_suppression import non_max_suppression_fast
 from time import time
-import proposal_box
 
 methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']

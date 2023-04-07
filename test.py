@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from proposal_box import *
+from utils import *
 
 # Read the image and convert to grayscale
 img = cv2.imread ("Dataset/Src10.bmp")

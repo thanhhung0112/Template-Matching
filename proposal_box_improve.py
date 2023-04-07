@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from proposal_box import *
+from utils import *
 from time import time
 from rembg import remove
 
