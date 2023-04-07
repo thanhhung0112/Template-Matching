@@ -95,15 +95,16 @@ def proposal_roi(image, temp):
     del labels_img
     return boxes, binary
 
-# img_path = 'Dataset/custom.jpg'
-# template_path = 'Dataset/template_custom.jpg'
+if __name__ == '__main__':
+    img_path = 'Dataset/custom.jpg'
+    template_path = 'Dataset/template_custom.jpg'
 
-# img_path = 'Dataset/Src1.bmp'
-# template_path = 'Dataset/Dst1.bmp'
+    # img_path = 'Dataset/Src1.bmp'
+    # template_path = 'Dataset/Dst1.bmp'
 
-# img_path = 'Dataset/Src10.bmp'
-# template_path = 'Dataset/Dst10.jpg'
+    # img_path = 'Dataset/Src10.bmp'
+    # template_path = 'Dataset/Dst10.jpg'
 
-# img = cv2.imread(img_path, 1)
-# template = cv2.imread(template_path, 1)
-# boxes, object_roi = proposal_roi(img, template)
+    img = cv2.imread(img_path, 1)
+    template = cv2.imread(template_path, 1)
+    boxes, object_roi = proposal_roi(img, template)
