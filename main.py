@@ -84,7 +84,7 @@ for box, angle in boxes:
                 continue
 
             if point is None:
-                continue
+                break
             
             # cv2.rectangle(roi, (point[0], point[1]), (point[0]+point[5], point[1]+point[6]), 255, 3)
             # plt.subplot(1, 2, 1)
