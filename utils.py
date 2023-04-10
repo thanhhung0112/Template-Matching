@@ -45,6 +45,13 @@ def laplacian_detect(img, ksize=3):
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
 
+def gradient(img, ksize=3):
+    grad_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=ksize)
+    grad_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=ksize)
+    grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
+    grad_mag_norm = cv2.normalize(grad_mag, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+    return grad_mag_norm
+
 def multiScaleRetinex(img, sigma_list):
     log_img = np.log10(img)
     kernel_sizes = [int(3 * sigma) | 1 for sigma in sigma_list]
