@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from rotate_template import rotate_template
 
 def gamma_correction(img, gamma):
     inv_gamma = 1.0 / gamma
@@ -47,72 +45,35 @@ def laplacian_detect(img, ksize=3):
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
 
-def proposal_roi(image, template, gamma=2, cliplimit=3, titleGridSize=5, laplacian=True, ksize_edge_detection=3):
-    if len(image.shape) == 3:
-        new_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    if len(template.shape) == 3:
-        template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+def singleScaleRetinex(img, log_img, sigma):
+    retinex = log_img - cv2.GaussianBlur(log_img, (0, 0), sigma)
+    return retinex
 
-    area_template = template.shape[0] * template.shape[1]
-    
-    new_image = gamma_correction(new_image, gamma=gamma)
-    new_image = remove_shadow(new_image)
-    new_image = filter_clahe(new_image, cliplimit=cliplimit, titleGridSize=titleGridSize)
-    new_image = sharpen(new_image)
+def multiScaleRetinex(img, sigma_list):
+    log_img = np.log10(img)
+    kernel_sizes = [int(3 * sigma) | 1 for sigma in sigma_list]
+    blurred_imgs = [cv2.GaussianBlur(log_img, (kernel_size, kernel_size), sigma) for sigma, kernel_size in zip(sigma_list, kernel_sizes)]
+    retinex = np.sum([log_img - blurred_img for blurred_img in blurred_imgs], axis=0)
+    retinex = retinex / len(sigma_list)
+    return retinex
 
-    if laplacian == True:
-        new_image = laplacian_detect(new_image, ksize=ksize_edge_detection)
+def colorRestoration(img, alpha, beta):
+    img_sum = np.sum(img, axis=-1, keepdims=True)
+    img_sum[img_sum == 0] = 1
+    color_restoration = beta * (np.log10(alpha * img) - np.log10(img_sum))
+    return color_restoration
 
-    # plt.imshow(new_image)
-    # plt.show()
+def simplestColorBalance(img, low_clip, high_clip):
+    low_val, high_val = np.percentile(img, (low_clip, high_clip))
+    out_img = np.uint8(np.clip((img - low_val) * 255.0 / (high_val - low_val), 0, 255))
+    return out_img
 
-    contours, _ = cv2.findContours(new_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # contours = list(map(lambda x: cv2.convexHull(x, True), contours))
-
-    # epsilon = list(map(lambda x: 0.01*cv2.arcLength(x, True), contours))
-    # contours = list(map(lambda x, y: cv2.approxPolyDP(x, y, True), contours, epsilon))
-
-    good_contours = [contours[i] for i in range(len(contours)) if (cv2.contourArea(contours[i]) > area_template/4) and (cv2.contourArea(contours[i]) < area_template)]
-
-    # cv2.drawContours(image, good_contours, -1, (0, 255, 0), 2)
-    # plt.imshow(image)
-    # plt.show()
-
-    box_anno = []
-    for cnt in good_contours:
-        rect = cv2.boundingRect(cnt)
-
-        ellipse_info = cv2.fitEllipse(cnt)
-        if 1 - ellipse_info[1][0] / ellipse_info[1][1] < 0.001:
-            box_anno.append((*rect, (270+cv2.fitEllipse(cnt)[2], 90+cv2.fitEllipse(cnt)[2], 0)))
-
-        angle1, angle2 = 270+cv2.fitEllipse(cnt)[2], 90+cv2.fitEllipse(cnt)[2]
-
-        box_anno.append((*rect, (angle1, angle2)))
-
-    return box_anno
-
-if __name__ == '__main__':
-    # img_path = 'Dataset/Src10.bmp'
-    # template_path = 'Dataset/Dst10.jpg'
-    # img_path = 'Dataset/Src5-135.bmp'
-    # template_path = 'Dataset/Dst5.bmp'
-    img_path = 'Dataset/Src2.bmp'
-    template_path = 'Dataset/Dst2.bmp'
-
-    img = cv2.imread(img_path, 1)
-    template = cv2.imread(template_path, 1)
-
-    boxes = proposal_roi(img, 
-                        template,
-                        gamma=2, 
-                        cliplimit=3, 
-                        titleGridSize=5, 
-                        laplacian=True, 
-                        ksize_edge_detection=5)
-
-    for idx, (x, y, w, h, angle) in enumerate(boxes):
-        cv2.rectangle(img, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 3)
-
-    plt.imshow(img)
-    plt.show()
+def MSRCP(img, sigma_list, G, b, alpha, beta, low_clip, high_clip):
+    img = np.float32(img) + 1.0
+    img_retinex = multiScaleRetinex(img, sigma_list)
+    img_color_restoration = colorRestoration(img, alpha, beta)
+    img_msrcp = G * (img_retinex * img_color_restoration + b)
+    img_msrcp = (img_msrcp - np.amin(img_msrcp)) / (np.amax(img_msrcp) - np.amin(img_msrcp)) * 255
+    img_msrcp = np.uint8(img_msrcp)
+    img_msrcp = simplestColorBalance(img_msrcp, low_clip, high_clip)
+    return img_msrcp
