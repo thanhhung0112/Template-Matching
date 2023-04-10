@@ -45,10 +45,6 @@ def laplacian_detect(img, ksize=3):
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
 
-def singleScaleRetinex(img, log_img, sigma):
-    retinex = log_img - cv2.GaussianBlur(log_img, (0, 0), sigma)
-    return retinex
-
 def multiScaleRetinex(img, sigma_list):
     log_img = np.log10(img)
     kernel_sizes = [int(3 * sigma) | 1 for sigma in sigma_list]
