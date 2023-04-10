@@ -13,13 +13,14 @@ from skimage.feature import local_binary_pattern
 methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 
-img_path = 'Dataset/custom.jpg'
-template_path = 'Dataset/template_custom.jpg'
-# img_path = 'Dataset/Src1.bmp'
-# template_path = 'Dataset/20220611.bmp'
+# img_path = 'Dataset/custom.jpg'
+# template_path = 'Dataset/template_custom.jpg'
+img_path = 'Dataset/Src2.bmp'
+template_path = 'Dataset/20220611.bmp'
 
 threshold = 0.75
 overlap = 0.5
+modify_angle = np.arange(-4, 4, 2)
 method = methods[3]
 
 img = cv2.imread(img_path, 1)
@@ -49,7 +50,8 @@ start = time()
 good_points = []
 for box, angle in boxes:
     for next_angle in angle:
-        for sub_angle in [next_angle, next_angle+1, next_angle+2, next_angle+3]:
+        sub_angles = next_angle + modify_angle
+        for sub_angle in sub_angles:
             temp_new, _, w_temp, h_temp = rotate_template(template, next_angle)
             epsilon_w, epsilon_h = np.abs([box[2]-w_temp, box[3]-h_temp])
 
@@ -84,7 +86,7 @@ for box, angle in boxes:
                 continue
 
             if point is None:
-                break
+                continue
             
             # cv2.rectangle(roi, (point[0], point[1]), (point[0]+point[5], point[1]+point[6]), 255, 3)
             # plt.subplot(1, 2, 1)
