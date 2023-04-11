@@ -9,39 +9,34 @@ from non_max_suppression import non_max_suppression_fast
 from rotate_template import rotate_template
 from time import time
 from skimage.feature import local_binary_pattern
+import json
 
 methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 
 # img_path = 'Dataset/custom.jpg'
 # template_path = 'Dataset/template_custom.jpg'
-img_path = 'Dataset/Src2.bmp'
-template_path = 'Dataset/20220611.bmp'
+img_path = 'Dataset/Src9.bmp'
+template_path = 'Dataset/Dst8.bmp'
+custom_enhance_algorithms_path = 'Custom_Algorithms/Src3-Src5.json'
 
-threshold = 0.75
+threshold = 0.8
 overlap = 0.5
 modify_angle = np.arange(-4, 4, 2)
-method = methods[3]
+method = methods[1]
 
 img = cv2.imread(img_path, 1)
 template = cv2.imread(template_path, 1)
-template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
 start = time()
 
-boxes, object_roi = proposal_roi(img, template)
+with open(custom_enhance_algorithms_path, 'r') as file:
+        enhance_algorithms = json.load(file)
+boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
 
 # print(boxes)
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-mask = np.zeros_like(img_gray)
-mask = cv2.bitwise_and(img_gray, object_roi)
-# img_gray = filter_clahe(img_gray, cliplimit=3, titleGridSize=8)
-img_gray = cv2.addWeighted(img_gray, 1, mask, 0.25, 0)
-img_gray = cv2.bitwise_and(img_gray, object_roi)
-# plt.imshow(img_gray)
-# plt.show()
-# v[0] = 1
 
 end = time()
 time_proposal = end - start
@@ -52,7 +47,7 @@ for box, angle in boxes:
     for next_angle in angle:
         sub_angles = next_angle + modify_angle
         for sub_angle in sub_angles:
-            temp_new, _, w_temp, h_temp = rotate_template(template, next_angle)
+            temp_new, _, w_temp, h_temp = rotate_template(template_gray, next_angle)
             epsilon_w, epsilon_h = np.abs([box[2]-w_temp, box[3]-h_temp])
 
             x_start, x_end = box[0]-epsilon_w, box[0]+box[2]+epsilon_w
@@ -75,12 +70,12 @@ for box, angle in boxes:
             # plt.subplot(1, 2, 2)
             # plt.imshow(temp_new)
             # plt.show()
-            print(roi.shape, template.shape)
+            print(roi.shape, template_gray.shape)
             if roi.shape[0]*roi.shape[1] > w_temp*h_temp*5:
                 break
 
             try:
-                point = match_template(roi, template, method, sub_angle, 100, threshold)
+                point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
                 print(point)
             except:
                 continue
@@ -90,9 +85,9 @@ for box, angle in boxes:
             
             # cv2.rectangle(roi, (point[0], point[1]), (point[0]+point[5], point[1]+point[6]), 255, 3)
             # plt.subplot(1, 2, 1)
-            # plt.imshow(roi)
+            # plt.imshow(roi, cmap='gray')
             # plt.subplot(1, 2, 2)
-            # plt.imshow(temp_new)
+            # plt.imshow(temp_new, cmap='gray')
             # plt.show()
 
             point[0], point[1] = point[0]+box[0]-epsilon_w, point[1]+box[1]-epsilon_h
