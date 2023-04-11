@@ -79,4 +79,5 @@ def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip
     img_msrcp = (img_msrcp - np.amin(img_msrcp)) / (np.amax(img_msrcp) - np.amin(img_msrcp)) * 255
     img_msrcp = np.uint8(img_msrcp)
     img_msrcp = simplestColorBalance(img_msrcp, low_clip, high_clip)
+    img_msrcp = cv2.cvtColor(img_msrcp, cv2.COLOR_BGR2GRAY) if len(img_msrcp.shape) == 3 else img_msrcp
     return img_msrcp
