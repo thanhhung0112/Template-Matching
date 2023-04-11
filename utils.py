@@ -18,7 +18,7 @@ def rembg_add_weights(img, alpha=0.75, beta=2.5):
     return enhanced_img
 
 @with_params
-def adaptive_threshold(img, selection_area=[0.25, 1.5]):
+def adaptive_threshold(img, iteration=1):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     hist = cv2.calcHist([img], [0], None, [256], [0, 256])
     score, _ = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_TRIANGLE)
@@ -32,16 +32,6 @@ def adaptive_threshold(img, selection_area=[0.25, 1.5]):
         kernel = np.ones((3, 3), np.uint8)
         mask = cv2.erode(mask, kernel, iterations=1)
         mask = cv2.dilate(mask, kernel, iterations=1)
-
-        _, labels, stats_img, _ = cv2.connectedComponentsWithStats(mask)
-        areas_img = stats_img[:, 4]
-        max_area = np.max(areas_img[1:])
-
-        binary = np.zeros_like(mask)
-
-        mask = (areas_img[1:] >= max_area*selection_area[0]) & (areas_img[1:] <= max_area*selection_area[1])
-        indices = np.where(mask)[0] + 1
-        binary[np.isin(labels, indices)] = 255
     
     else:
         _, mask = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_TRIANGLE)
@@ -50,16 +40,18 @@ def adaptive_threshold(img, selection_area=[0.25, 1.5]):
         mask = cv2.erode(mask, kernel, iterations=1)
         mask = cv2.dilate(mask, kernel, iterations=1)
 
-        _, labels, stats_img, _ = cv2.connectedComponentsWithStats(mask)
-        areas_img = stats_img[:, 4]
-        max_area = np.max(areas_img[1:])
+    return mask
 
-        binary = np.zeros_like(mask)
+def remove_wrong_contours(img, area_temp, selection_area=[0.25, 1.5]):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
+    _, labels, stats_img, _ = cv2.connectedComponentsWithStats(img)
+    areas_img = stats_img[:, 4]
 
-        mask = (areas_img[1:] >= max_area*selection_area[0]) & (areas_img[1:] <= max_area*selection_area[1])
-        indices = np.where(mask)[0] + 1
-        binary[np.isin(labels, indices)] = 255
+    binary = np.zeros_like(img)
 
+    mask = (areas_img[1:] >= area_temp*selection_area[0]) & (areas_img[1:] <= area_temp*selection_area[1])
+    indices = np.where(mask)[0] + 1
+    binary[np.isin(labels, indices)] = 255
     return binary
 
 @with_params
@@ -80,15 +72,14 @@ def pixel_duplicate(img, ratio):
     return enhanced_img
 
 @with_params
-def remove_shadow(img):
+def remove_shadow(img, blur=21, thresh=220):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     dilated_img = cv2.dilate(img, np.ones((8, 8), np.uint8)) 
-    # bg_img = cv2.GaussianBlur(dilated_img, (15, 15), -1)
-    bg_img = cv2.medianBlur(dilated_img, 21)
+    bg_img = cv2.GaussianBlur(dilated_img, (blur, blur), -1)
     diff_img = 255 - cv2.absdiff(img, bg_img)
     norm_img = diff_img.copy()
     cv2.normalize(diff_img, norm_img, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-    _, thr_img = cv2.threshold(norm_img, 225, 255, cv2.THRESH_BINARY_INV)
+    _, thr_img = cv2.threshold(norm_img, thresh, 255, cv2.THRESH_BINARY_INV)
     cv2.normalize(thr_img, thr_img, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
     return thr_img
 
@@ -105,11 +96,11 @@ def sharpen(img):
     return img.astype(np.uint8)
 
 @with_params
-def filter_clahe(image, cliplimit=3, titleGridSize=8):
+def filter_clahe(img, cliplimit=3, titleGridSize=8):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     clahe = cv2.createCLAHE(clipLimit=cliplimit, tileGridSize=(titleGridSize, titleGridSize))
-    image = clahe.apply(image)
-    return image
+    img = clahe.apply(img)
+    return img
 
 @with_params
 def laplacian_detect(img, ksize=3):
@@ -126,6 +117,18 @@ def gradient(img, ksize=3):
     grad_mag = np.sqrt(grad_x ** 2 + grad_y ** 2)
     grad_mag_norm = cv2.normalize(grad_mag, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
     return grad_mag_norm
+
+@with_params
+def canny_detect(img, thresh1=100, thresh2=200):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
+    return cv2.Canny(img, thresh1, thresh2)
+
+@with_params
+def contrast_stretching(img, low_clip=5.0, high_clip=97.0):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
+    low_val, high_val = np.percentile(img, (low_clip, high_clip))
+    out_img = np.uint8(np.clip((img - low_val) * 255.0 / (high_val - low_val), 0, 255))
+    return out_img
 
 def multiScaleRetinex(img, sigma_list=[15, 80, 256]):
     log_img = np.log10(img)
