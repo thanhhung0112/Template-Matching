@@ -52,7 +52,7 @@ def gradient(img, ksize=3):
     grad_mag_norm = cv2.normalize(grad_mag, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
     return grad_mag_norm
 
-def multiScaleRetinex(img, sigma_list):
+def multiScaleRetinex(img, sigma_list=[15, 80, 256]):
     log_img = np.log10(img)
     kernel_sizes = [int(3 * sigma) | 1 for sigma in sigma_list]
     blurred_imgs = [cv2.GaussianBlur(log_img, (kernel_size, kernel_size), sigma) for sigma, kernel_size in zip(sigma_list, kernel_sizes)]
@@ -60,18 +60,18 @@ def multiScaleRetinex(img, sigma_list):
     retinex = retinex / len(sigma_list)
     return retinex
 
-def colorRestoration(img, alpha, beta):
+def colorRestoration(img, alpha=125, beta=50):
     img_sum = np.sum(img, axis=-1, keepdims=True)
     img_sum[img_sum == 0] = 1
     color_restoration = beta * (np.log10(alpha * img) - np.log10(img_sum))
     return color_restoration
 
-def simplestColorBalance(img, low_clip, high_clip):
+def simplestColorBalance(img, low_clip=5.0, high_clip=97.0):
     low_val, high_val = np.percentile(img, (low_clip, high_clip))
     out_img = np.uint8(np.clip((img - low_val) * 255.0 / (high_val - low_val), 0, 255))
     return out_img
 
-def MSRCP(img, sigma_list, G, b, alpha, beta, low_clip, high_clip):
+def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip=5.0, high_clip=97.0):
     img = np.float32(img) + 1.0
     img_retinex = multiScaleRetinex(img, sigma_list)
     img_color_restoration = colorRestoration(img, alpha, beta)
