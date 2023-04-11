@@ -71,7 +71,10 @@ def simplestColorBalance(img, low_clip=5.0, high_clip=97.0):
     out_img = np.uint8(np.clip((img - low_val) * 255.0 / (high_val - low_val), 0, 255))
     return out_img
 
-def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip=5.0, high_clip=97.0):
+def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip=5.0, high_clip=97.0, pyramid=2):
+    for _ in range(pyramid):
+        img = cv2.pyrDown(img)
+
     img = np.float32(img) + 1.0
     img_retinex = multiScaleRetinex(img, sigma_list)
     img_color_restoration = colorRestoration(img, alpha, beta)
@@ -80,4 +83,8 @@ def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip
     img_msrcp = np.uint8(img_msrcp)
     img_msrcp = simplestColorBalance(img_msrcp, low_clip, high_clip)
     img_msrcp = cv2.cvtColor(img_msrcp, cv2.COLOR_BGR2GRAY) if len(img_msrcp.shape) == 3 else img_msrcp
+
+    for _ in range(pyramid):
+        img_msrcp = cv2.pyrUp(img_msrcp)
+
     return img_msrcp
