@@ -45,11 +45,11 @@ def proposal_roi(image, temp, enhance_algorithms=None):
         angle = rect[2], rect[2]+90, rect[2]+180, rect[2]+270
         boxes.append([box, angle])
 
-    for box, angle in boxes:
-        cv2.rectangle(image, (box[0], box[1]), (box[0]+box[2], box[1]+box[3]), (255, 0, 0), 6)
+    # for box, angle in boxes:
+    #     cv2.rectangle(image, (box[0], box[1]), (box[0]+box[2], box[1]+box[3]), (255, 0, 0), 6)
 
-    plt.imshow(image)
-    plt.show()
+    # plt.imshow(image)
+    # plt.show()
 
     del labels_img
     return boxes, enhanced_img
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     img = cv2.imread(img_path, 1)
     template = cv2.imread(template_path, 1)
 
-    with open('Custom_Algorithms/Src3-Src5.json', 'r') as file:
+    with open('Custom_enhance/Src3-5-8-9-10.json', 'r') as file:
         enhance_algorithms = json.load(file)
 
     boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
