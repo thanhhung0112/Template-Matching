@@ -7,27 +7,36 @@ from proposal_box_improve import proposal_roi
 from match_template import match_template
 from non_max_suppression import non_max_suppression_fast
 from rotate_template import rotate_template
+from image_representation import image_representation
 from time import time
-from skimage.feature import local_binary_pattern
 import json
 
 methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 
-# img_path = 'Dataset/custom.jpg'
-# template_path = 'Dataset/template_custom.jpg'
-img_path = 'Dataset/Src9.bmp'
-template_path = 'Dataset/Dst8.bmp'
-custom_enhance_algorithms_path = 'Custom_Algorithms/Src3-Src5.json'
+img_path = 'Dataset/custom.jpg'
+template_path = 'Dataset/template_custom.jpg'
+# img_path = 'Dataset/Src1.bmp'
+# template_path = 'Dataset/20220611.bmp'
 
-threshold = 0.8
-overlap = 0.5
+# img_path = 'Dataset/Src10.bmp'
+# template_path = 'Dataset/Dst10.jpg'
+
+custom_enhance_algorithms_path = 'Custom_enhance/Custom.json'
+custom_representation = 'Custom_representation/Custom.json'
+
+threshold = 0.5
+overlap = 0.4
 modify_angle = np.arange(-4, 4, 2)
 method = methods[1]
 
 img = cv2.imread(img_path, 1)
 template = cv2.imread(template_path, 1)
-template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+
+with open(custom_representation, 'r') as file:
+    representation_algorithms = json.load(file)
+
+template_gray = image_representation(template, target='template', representation_algorithms=representation_algorithms)
 
 start = time()
 
@@ -35,8 +44,7 @@ with open(custom_enhance_algorithms_path, 'r') as file:
         enhance_algorithms = json.load(file)
 boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
 
-# print(boxes)
-img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+img_gray = image_representation(img, target='target_image', representation_algorithms=representation_algorithms)
 
 end = time()
 time_proposal = end - start
@@ -47,7 +55,7 @@ for box, angle in boxes:
     for next_angle in angle:
         sub_angles = next_angle + modify_angle
         for sub_angle in sub_angles:
-            temp_new, _, w_temp, h_temp = rotate_template(template_gray, next_angle)
+            temp_new, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
             epsilon_w, epsilon_h = np.abs([box[2]-w_temp, box[3]-h_temp])
 
             x_start, x_end = box[0]-epsilon_w, box[0]+box[2]+epsilon_w
@@ -61,22 +69,19 @@ for box, angle in boxes:
 
             roi = img_padded[y_start+abs(top):y_end+abs(top)+abs(bottom),
                             x_start+abs(left):x_end+abs(left)+abs(right)]
-            
-            # roi = cv2.medianBlur(roi, 15)
-            # roi = laplacian_detect(roi, ksize=7)
-            # _, roi = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_TRIANGLE)
+
             # plt.subplot(1, 2, 1)
             # plt.imshow(roi)
             # plt.subplot(1, 2, 2)
             # plt.imshow(temp_new)
             # plt.show()
-            print(roi.shape, template_gray.shape)
+
             if roi.shape[0]*roi.shape[1] > w_temp*h_temp*5:
-                break
+                continue
 
             try:
                 point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
-                print(point)
+                print('Point: ', point)
             except:
                 continue
 
