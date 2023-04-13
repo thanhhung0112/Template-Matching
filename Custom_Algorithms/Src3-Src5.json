@@ -1,6 +1,0 @@
-{
-    "gamma_correction": {"gamma": 0.85},
-    "remove_shadow": {"blur": 7, "thresh": 220},
-    "sharpen": {},
-    "adaptive_threshold": {"iteration": 1}
-}
