@@ -1,0 +1,8 @@
+{
+    "template": {
+        "apply_representation": {"color": "gray", "channel": 1}
+    },
+    "target_image": {
+        "apply_representation": {"color": "gray", "channel": 1}
+    }
+}
