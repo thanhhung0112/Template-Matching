@@ -1,0 +1,14 @@
+{   
+    "MSRCP": {"sigma_list": [15, 80, 256],
+               "G": 5, 
+               "b": 25,
+               "alpha": 125,
+               "beta": 50,
+               "low_clip": 5.0,
+               "high_clip": 97.0, 
+               "pyramid": 2},
+    "gamma_correction": {"gamma": 0.65},
+    "remove_shadow": {"blur": 15, "thresh": 220},
+    "sharpen": {},
+    "adaptive_threshold": {"iteration": 1}
+}
