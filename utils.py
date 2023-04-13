@@ -151,6 +151,7 @@ def simplestColorBalance(img, low_clip=5.0, high_clip=97.0):
 
 @with_params
 def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip=5.0, high_clip=97.0, pyramid=2):
+    assert len(img.shape) == 3, "The image has to be a color image"
     for _ in range(pyramid):
         img = cv2.pyrDown(img)
 
@@ -167,3 +168,18 @@ def MSRCP(img, sigma_list=[15, 80, 256], G=5, b=25, alpha=125, beta=50, low_clip
         img_msrcp = cv2.pyrUp(img_msrcp)
 
     return img_msrcp
+
+@with_params
+def apply_representation(img, color='lab', channel=0):
+    assert len(img.shape) == 3, "The image has to be a color image"
+    assert channel <= 2, "The channel has to be smaller and equal 2"
+
+    if color == 'lab':
+        new_img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+        return new_img[:, :, channel]
+    elif color == 'hsv':
+        new_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        return new_img[:, :, channel]
+    elif color == 'gray':
+        new_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return new_img
