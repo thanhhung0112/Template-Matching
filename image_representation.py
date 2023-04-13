@@ -1,16 +1,16 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.feature import local_binary_pattern
+from utils import *
 
-# Load the image
-img = cv2.imread("Dataset/Dst1.bmp", 0)
+def image_representation(img, target, representation_algorithms):
+    if target == 'template':
+        algorithms = representation_algorithms['template']
+    elif target == 'target_image':
+        algorithms = representation_algorithms['target_image']
 
-# Define the LBP operator
-radius = 10
-n_points = 8 * radius
-lbp = local_binary_pattern(img, n_points, radius, 'uniform')
-lbp = np.uint8(lbp)
+    for key, value in algorithms.items():
+        func = eval(key)
+        new_img = func(img, value)
 
-plt.imshow(lbp)
-plt.show()
+    return new_img
