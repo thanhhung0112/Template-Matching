@@ -20,6 +20,7 @@ def get_frame(url):
 if __name__ == '__main__':
     args = parser.parse_args()
     ip_address = args.ip_address
-    ip_address = ip_address + "/shot.jpg"
+    # ip_address = ip_address + "/shot.jpg"
+    ip_address = f'http://{ip_address}:8080/shot.jpg'
 
     get_frame(ip_address)
