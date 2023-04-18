@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 def export_csv(points):
     x = points[:, 0]
