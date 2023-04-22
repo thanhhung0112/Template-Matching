@@ -15,7 +15,7 @@ def get_frame(url):
     img_resp = requests.get(url)
     img_arr = np.array(bytearray(img_resp.content), dtype=np.uint8)
     img = cv2.imdecode(img_arr, -1)
-    cv2.imwrite('/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Stream_camera/input_image.png', img)
+    cv2.imwrite('Stream_camera/input_image.png', img)
 
 if __name__ == '__main__':
     args = parser.parse_args()
