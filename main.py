@@ -1,7 +1,8 @@
+# import sys
+# sys.path.append('./cvu_program')
+
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 from utils import *
 from proposal_box_improve import proposal_roi
 from match_template import match_template
@@ -12,6 +13,7 @@ from time import time
 import json
 from export_csv import export_csv
 import argparse
+import os
 
 descStr = 'computer vision unit'
 parser = argparse.ArgumentParser(description=descStr)
@@ -22,6 +24,8 @@ parser.add_argument('--overlap', dest='overlap', required=True)
 parser.add_argument('--method', dest='method', required=True)
 parser.add_argument('--min_modify', dest='min_modify', default='-1')
 parser.add_argument('--max_modify', dest='max_modify', default='1')
+parser.add_argument('--enhance', dest='custom_enhance_algorithms_path', required=True)
+parser.add_argument('--representation', dest='custom_representation', required=True)
 
 args = parser.parse_args()
 img_path = args.img_path
@@ -32,28 +36,16 @@ method = args.method
 min_modify = int(args.min_modify)
 max_modify = int(args.max_modify)
 modify_angle = np.arange(min_modify, max_modify, 1)
+custom_enhance_algorithms_path = args.custom_enhance_algorithms_path
+custom_representation = args.custom_representation
 
 # methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
 #             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 
-# img_path = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Dataset/custom2.jpg'
-# template_path = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Dataset/template_custom.jpg'
-# img_path = 'Dataset/Src1.bmp'
-# template_path = 'Dataset/20220611.bmp'
-# img_path = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Dataset/Src3.bmp'
-# template_path = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Dataset/Dst3.bmp'
-
-custom_enhance_algorithms_path = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Custom_enhance/Src3-5-8-9-10.json'
-custom_representation = '/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Custom_representation/Src3-5-8-9-10.json'
-
-# threshold = 0.97
-# overlap = 0.4
-
-# modify_angle = np.arange(-1, 1, 1)
-# method = methods[3]
-
 img = cv2.imread(img_path, 1)
 template = cv2.imread(template_path, 1)
+
+# img = cv2.resize(img, (4608, 3456))
 
 with open(custom_representation, 'r') as file:
     representation_algorithms = json.load(file)
@@ -133,27 +125,23 @@ except:
     print('No detection found')
 
 end = time()
-# print(np.round(good_points, 3))
+
+if os.path.isfile('Output/output.jpg') == True:
+    os.remove('Output/output.jpg')
+if os.path.isfile('Output/result.csv') == True:
+    os.remove('Output/result.csv')
+
 export_csv(good_points)
 print(f'found {len(good_points)} objects')
 print(f'time proposal: {time_proposal}')
 print(f'time match: {end-start}')
-
-fig, ax = plt.subplots(1)
-ax.imshow(img)
 
 for point_info in good_points:
     point = point_info[0], point_info[1]
     width = point_info[5]
     height = point_info[6]
 
-    # plt.scatter(point[0] + (width/2), point[1] + (height/2), s=20, color="red")
-    # box = patches.Rectangle((point[0], point[1]), width, height, color="green", alpha=0.50, label='Bounding box')
-    # ax.add_patch(box)
-    # plt.legend(handles=[box])
     cv2.circle(img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
     cv2.rectangle(img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
 
-cv2.imwrite('/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Output/output.jpg', img)
-# plt.imshow(img)
-# plt.show()
+cv2.imwrite('Output/output.jpg', img)
