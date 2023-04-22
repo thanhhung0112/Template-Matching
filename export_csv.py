@@ -18,4 +18,4 @@ def export_csv(points):
     index_series = pd.Series(np.arange(len(score)), name='index')
 
     result = pd.concat([index_series, centerx_series, centery_series, angle_series, score_series], axis=1)
-    result.to_csv('/home/kratos/code/Capstone/Demo-model-AI/Template-Matching/Output/result.csv', index=False)
+    result.to_csv('Output/result.csv', index=False)
