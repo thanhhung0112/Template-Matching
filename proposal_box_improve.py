@@ -16,6 +16,8 @@ def proposal_roi(image, temp, enhance_algorithms=None):
     for key, value in enhance_algorithms.items():
         func = eval(key)
         enhanced_img = func(enhanced_img, value)
+        # plt.imshow(enhanced_img)
+        # plt.show()
 
     enhanced_img = remove_wrong_contours(enhanced_img, area_temp, selection_area=[0.1, 1.5])
 
@@ -55,12 +57,6 @@ def proposal_roi(image, temp, enhance_algorithms=None):
     return boxes, enhanced_img
 
 if __name__ == '__main__':
-    # img_path = 'Dataset/custom.jpg'
-    # template_path = 'Dataset/template_custom.jpg'
-
-    # img_path = 'Dataset/Src5-0.bmp'
-    # template_path = 'Dataset/Dst5.bmp'
-
     img_path = 'Dataset/Src10.bmp'
     template_path = 'Dataset/Dst10.jpg'
 
