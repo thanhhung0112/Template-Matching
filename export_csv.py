@@ -18,4 +18,7 @@ def export_csv(points):
     index_series = pd.Series(np.arange(len(score)), name='index')
 
     result = pd.concat([index_series, centerx_series, centery_series, angle_series, score_series], axis=1)
+
+    if not os.path.exists("Output"):
+        os.makedirs("Output")
     result.to_csv('Output/result.csv', index=False)

@@ -144,4 +144,6 @@ for point_info in good_points:
     cv2.circle(img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
     cv2.rectangle(img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
 
+if not os.path.exists("Output"):
+    os.makedirs("Output")
 cv2.imwrite('Output/output.jpg', img)
