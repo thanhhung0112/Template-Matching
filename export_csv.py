@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 import os
 
-def export_csv(points):
+def export_csv(points, output_folder):
     x = points[:, 0]
     y = points[:, 1]
     angle = points[:, 2]
     w, h = points[:, 5], points[:, 6]
-    score = points[:, 4]
+    score = points[:, 4] * 100
     centerx = np.int32(x + w/2)
     centery = np.int32(y + h/2)
 
@@ -19,6 +19,6 @@ def export_csv(points):
 
     result = pd.concat([index_series, centerx_series, centery_series, angle_series, score_series], axis=1)
 
-    if not os.path.exists("Output"):
-        os.makedirs("Output")
-    result.to_csv('Output/result.csv', index=False)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    result.to_csv(os.path.join(output_folder, 'result.csv'), index=False)

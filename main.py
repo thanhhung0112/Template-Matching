@@ -57,6 +57,7 @@ start = time()
 with open(custom_enhance_algorithms_path, 'r') as file:
         enhance_algorithms = json.load(file)
 boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
+print(boxes)
 
 img_gray = image_representation(img, target='target_image', representation_algorithms=representation_algorithms)
 
@@ -131,7 +132,7 @@ if os.path.isfile('Output/output.jpg') == True:
 if os.path.isfile('Output/result.csv') == True:
     os.remove('Output/result.csv')
 
-export_csv(good_points)
+export_csv(good_points, 'Output')
 print(f'found {len(good_points)} objects')
 print(f'time proposal: {time_proposal}')
 print(f'time match: {end-start}')

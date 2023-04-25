@@ -1,4 +1,4 @@
-{
+{   
     "rembg_add_weights": {"alpha": 0.75,
                           "beta": 2.5},
     "sharpen": {},
