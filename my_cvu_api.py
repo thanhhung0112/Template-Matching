@@ -19,7 +19,7 @@ CORS(app)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/my_cvu_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')
 def pattern_matching():
     if request.method == 'POST':
@@ -145,4 +145,4 @@ def pattern_matching():
         return 'Done'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
