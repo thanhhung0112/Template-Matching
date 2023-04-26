@@ -3,15 +3,12 @@ from flask_cors import CORS, cross_origin
 
 import numpy as np
 import cv2
-from PIL import Image
-import matplotlib.pyplot as plt
 from utils import *
 from proposal_box_improve import proposal_roi
 from match_template import match_template
 from non_max_suppression import non_max_suppression_fast
 from rotate_template import rotate_template
 from image_representation import image_representation
-from time import time
 import json
 from export_csv import export_csv
 import os
@@ -26,14 +23,36 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 @cross_origin(origin='*')
 def pattern_matching():
     if request.method == 'POST':
-        img = Image.open(request.files['img']).convert('RGB')
-        img = np.array(img)
+        api_folder = request.form.get('api_folder')
+        api_folder = api_folder.replace('\\', '/')
 
-        template = Image.open(request.files['template']).convert('RGB')
-        template = np.array(template)
+        if platform == "linux" or platform == "linux2":
+            if api_folder.startswith('//wsl.localhost/'):
+                idx = api_folder.index('/home')
+                api_folder = api_folder[idx:]
 
-        bgr_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        bgr_template = cv2.cvtColor(template, cv2.COLOR_RGB2BGR)
+            if api_folder[1] == ':':
+                api_folder = os.popen('wslpath "{}"'.format(api_folder)).read().strip()
+
+        elif platform == "win32":
+            api_folder = api_folder.replace('/', '\\')
+
+        if api_folder is not None:
+            os.chdir(api_folder)
+
+        img_path = request.form.get('img_path')
+        bgr_img = cv2.imread(img_path)
+
+        template_path = request.form.get('template_path')
+        bgr_template = cv2.imread(template_path)
+
+        enhance_path = request.form.get('enhance')
+        with open(enhance_path, 'r') as f:
+            enhance_algorithms = json.load(f)
+        
+        representation_path = request.form.get('representation')
+        with open(representation_path, 'r') as f:
+            representation_algorithms = json.load(f)
 
         threshold = float(request.form.get('threshold'))
         overlap = float(request.form.get('overlap'))
@@ -42,33 +61,13 @@ def pattern_matching():
         max_modify = int(request.form.get('max_modify'))
         modify_angle = np.arange(min_modify, max_modify, 1)
 
-        enhance_algorithms = request.files['enhance']
-        enhance_algorithms = json.load(enhance_algorithms)
-
-        representation_algorithms = request.files['representation']
-        representation_algorithms = json.load(representation_algorithms)
-
         output_folder = request.form.get('output_folder')
-        output_folder = output_folder.replace('\\', '/')
-        
-        if platform == "linux" or platform == "linux2":
-            if output_folder.startswith('//wsl.localhost/'):
-                idx = output_folder.index('/home')
-                output_folder = output_folder[idx:]
-
-            if output_folder[1] == ':':
-                output_folder = os.popen('wslpath "{}"'.format(output_folder)).read().strip()
-
-        elif platform == "win32":
-            output_folder = output_folder.replace('/', '\\')
 
         template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
 
-        boxes, _ = proposal_roi(bgr_img, template, enhance_algorithms=enhance_algorithms)
+        boxes, _ = proposal_roi(bgr_img, bgr_template, enhance_algorithms=enhance_algorithms)
 
         img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
-
-        print(boxes)
 
         good_points = []
         for box, angle in boxes:
@@ -138,12 +137,12 @@ def pattern_matching():
             width = point_info[5]
             height = point_info[6]
 
-            cv2.circle(img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
-            cv2.rectangle(img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
+            cv2.circle(bgr_img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
+            cv2.rectangle(bgr_img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
 
-        cv2.imwrite(path_to_save_image, img)
+        cv2.imwrite(path_to_save_image, bgr_img)
 
         return 'Done'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
