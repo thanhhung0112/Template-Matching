@@ -46,6 +46,8 @@ def get_frame():
             os.makedirs(output_folder)
 
         path_to_save_image = os.path.join(output_folder, 'input_image.png')
+        if os.path.isfile(path_to_save_image) == True:
+            os.remove(path_to_save_image)
 
         cv2.imwrite(path_to_save_image, img)
         
