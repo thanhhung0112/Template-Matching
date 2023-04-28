@@ -41,9 +41,11 @@ def pattern_matching():
             os.chdir(api_folder)
 
         img_path = request.form.get('img_path')
+        img_path = img_path.replace('\\', '/')
         bgr_img = cv2.imread(img_path)
 
         template_path = request.form.get('template_path')
+        template_path = template_path.replace('\\', '/')
         bgr_template = cv2.imread(template_path)
 
         enhance_path = request.form.get('enhance')
