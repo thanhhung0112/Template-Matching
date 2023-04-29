@@ -10,7 +10,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-Running the command line
+Running the following command line
 ```bash
 python main.py --img_path <path/to/the/image> \
                --template_path <path/to/the/template> \
