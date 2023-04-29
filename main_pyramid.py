@@ -1,8 +1,7 @@
-import cv2
-import numpy as np
 import matplotlib.pyplot as plt
-from match_template import match_template
 import matplotlib.patches as patches
+
+from Component import *
 from Utils import *
 
 from time import time
