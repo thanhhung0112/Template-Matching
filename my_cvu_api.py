@@ -8,6 +8,7 @@ def pattern_matching():
     if request.method == 'POST':
         api_folder = request.form.get('api_folder')
         api_folder = api_folder.replace('\\', '/')
+        print(api_folder)
 
         if platform == "linux" or platform == "linux2":
             if api_folder.startswith('//wsl.localhost/'):
@@ -127,7 +128,7 @@ def pattern_matching():
 
         cv2.imwrite(path_to_save_image, bgr_img)
 
-        return 'Done'
+        return 'Done\n'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

@@ -43,7 +43,7 @@ def get_frame():
 
         cv2.imwrite(path_to_save_image, img)
         
-        return "Done"
+        return "Done\n"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
