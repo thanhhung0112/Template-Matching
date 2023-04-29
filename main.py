@@ -1,17 +1,13 @@
-# import sys
-# sys.path.append('./cvu_program')
-
 import numpy as np
 import cv2
-from utils import *
+
+from Utils import *
+
 from proposal_box_improve import proposal_roi
 from match_template import match_template
-from non_max_suppression import non_max_suppression_fast
-from rotate_template import rotate_template
-from image_representation import image_representation
+
 from time import time
 import json
-from export_csv import export_csv
 import argparse
 import os
 

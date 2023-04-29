@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from match_template import match_template
 import matplotlib.patches as patches
-from rotate_template import rotate_template
-from non_max_suppression import non_max_suppression_fast
+from Utils import *
+
 from time import time
 
 methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',

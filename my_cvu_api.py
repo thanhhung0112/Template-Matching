@@ -1,23 +1,12 @@
-from flask import Flask, request
-from flask_cors import CORS, cross_origin
-
 import numpy as np
 import cv2
-from utils import *
-from proposal_box_improve import proposal_roi
-from match_template import match_template
-from non_max_suppression import non_max_suppression_fast
-from rotate_template import rotate_template
-from image_representation import image_representation
 import json
-from export_csv import export_csv
-import os
-from sys import platform
 
-app = Flask(__name__)
-CORS(app)
+from Utils import *
+from API import *
 
-app.config['CORS_HEADERS'] = 'Content-Type'
+from match_template import match_template
+from proposal_box_improve import proposal_roi
 
 @app.route('/my_cvu_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')

@@ -1,16 +1,8 @@
-from flask import Flask, request
-from flask_cors import CORS, cross_origin
-
 import requests
 import cv2
 import numpy as np
-from sys import platform
-import os
 
-app = Flask(__name__)
-CORS(app)
-
-app.config['CORS_HEADERS'] = 'Content-Type'
+from API import *
 
 @app.route('/my_camera_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')

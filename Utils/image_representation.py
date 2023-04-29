@@ -1,7 +1,6 @@
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import *
+from Utils.image_processing_algorithms import *
 
 def image_representation(img, target, representation_algorithms):
     if target == 'template':

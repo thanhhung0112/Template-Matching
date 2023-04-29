@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
-
-from rotate_template import rotate_template
 import matplotlib.pyplot as plt
-from time import time
+
+from Utils import *
 
 def match_template(img, template, method, rot, scale, matched_thresh):
     if len(img.shape) == 3:
