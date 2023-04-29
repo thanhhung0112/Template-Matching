@@ -15,22 +15,22 @@ descStr = 'computer vision unit'
 parser = argparse.ArgumentParser(description=descStr)
 parser.add_argument('--img_path', dest='img_path', required=True)
 parser.add_argument('--template_path', dest='template_path', required=True)
-parser.add_argument('--threshold', dest='threshold', required=True)
-parser.add_argument('--overlap', dest='overlap', default=0.4)
+parser.add_argument('--threshold', dest='threshold', required=True, type=float)
+parser.add_argument('--overlap', dest='overlap', default=0.4, type=float)
 parser.add_argument('--method', dest='method', required=True)
-parser.add_argument('--min_modify', dest='min_modify', default='-1')
-parser.add_argument('--max_modify', dest='max_modify', default='1')
+parser.add_argument('--min_modify', dest='min_modify', default='-1', type=int)
+parser.add_argument('--max_modify', dest='max_modify', default='1', type=int)
 parser.add_argument('--enhance', dest='custom_enhance_algorithms_path', required=True)
 parser.add_argument('--representation', dest='custom_representation', required=True)
 
 args = parser.parse_args()
 img_path = args.img_path
 template_path = args.template_path 
-threshold = float(args.threshold)
-overlap = float(args.overlap)
+threshold = args.threshold
+overlap = args.overlap
 method = args.method
-min_modify = int(args.min_modify)
-max_modify = int(args.max_modify)
+min_modify = args.min_modify
+max_modify = args.max_modify
 modify_angle = np.arange(min_modify, max_modify, 1)
 custom_enhance_algorithms_path = args.custom_enhance_algorithms_path
 custom_representation = args.custom_representation
@@ -40,8 +40,6 @@ custom_representation = args.custom_representation
 
 img = cv2.imread(img_path, 1)
 template = cv2.imread(template_path, 1)
-
-# img = cv2.resize(img, (4608, 3456))
 
 with open(custom_representation, 'r') as file:
     representation_algorithms = json.load(file)
