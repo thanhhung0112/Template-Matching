@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description=descStr)
 parser.add_argument('--img_path', dest='img_path', required=True)
 parser.add_argument('--template_path', dest='template_path', required=True)
 parser.add_argument('--threshold', dest='threshold', required=True)
-parser.add_argument('--overlap', dest='overlap', required=True)
+parser.add_argument('--overlap', dest='overlap', default=0.4)
 parser.add_argument('--method', dest='method', required=True)
 parser.add_argument('--min_modify', dest='min_modify', default='-1')
 parser.add_argument('--max_modify', dest='max_modify', default='1')
@@ -53,7 +53,7 @@ start = time()
 with open(custom_enhance_algorithms_path, 'r') as file:
         enhance_algorithms = json.load(file)
 boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
-print(boxes)
+# print(boxes)
 
 img_gray = image_representation(img, target='target_image', representation_algorithms=representation_algorithms)
 
