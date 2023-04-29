@@ -1,12 +1,6 @@
-import numpy as np
-import cv2
-import json
-
 from Utils import *
 from API import *
-
-from match_template import match_template
-from proposal_box_improve import proposal_roi
+from Component import *
 
 @app.route('/my_cvu_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')

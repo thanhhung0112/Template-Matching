@@ -1,13 +1,7 @@
-import numpy as np
-import cv2
-
 from Utils import *
-
-from proposal_box_improve import proposal_roi
-from match_template import match_template
+from Component import *
 
 from time import time
-import json
 import argparse
 import os
 
