@@ -2,3 +2,6 @@ opencv-python-headless
 matplotlib
 rembg
 pandas
+flask
+flask-cors
+requests
