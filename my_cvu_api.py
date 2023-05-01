@@ -66,6 +66,19 @@ def pattern_matching():
         if api_folder is not None:
             os.chdir(api_folder)
 
+        output_folder = request.form.get('output_folder')
+        path_to_save_image = os.path.join(output_folder, 'output.jpg')
+        path_to_save_csv = os.path.join(output_folder, 'result.csv')
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        
+        else:
+            if os.path.isfile(path_to_save_image) == True:
+                os.remove(path_to_save_image)
+            if os.path.isfile(path_to_save_csv) == True:
+                os.remove(path_to_save_csv)
+
         try:
             img_path = request.form.get('img_path')
             img_path = img_path.replace('\\', '/')
@@ -75,8 +88,11 @@ def pattern_matching():
             template_path = template_path.replace('\\', '/')
             bgr_template = cv2.imread(template_path)
 
+            if (bgr_img is None) or (bgr_template is None):
+                return "No image founded\n"
+
         except FileNotFoundError:
-            print("Invalid image paths")
+            return "Invalid image paths\n"
 
         enhance_path = request.form.get('enhance')
         with open(enhance_path, 'r') as f:
@@ -93,13 +109,11 @@ def pattern_matching():
             max_modify = int(request.form.get('max_modify'))
 
         except ValueError:
-            print("Invalid input values")
+            return "Invalid input values\n"
 
         method = request.form.get('method')
         
         modify_angle = np.arange(min_modify, max_modify, 1)
-
-        output_folder = request.form.get('output_folder')
 
         template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
 
@@ -131,21 +145,10 @@ def pattern_matching():
         try:
             good_points = non_max_suppression_fast(good_points, overlap)
         except:
-            print('No detection found')
+            return 'No detection found'
 
         if len(good_points) == 0:
             return 'No detection found'
-
-        path_to_save_image = os.path.join(output_folder, 'output.jpg')
-        path_to_save_csv = os.path.join(output_folder, 'result.csv')
-
-        if os.path.isfile(path_to_save_image) == True:
-            os.remove(path_to_save_image)
-        if os.path.isfile(path_to_save_csv) == True:
-            os.remove(path_to_save_csv)
-
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
 
         export_csv(good_points, output_folder)
 
