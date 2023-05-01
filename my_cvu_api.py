@@ -2,13 +2,55 @@ from Utils import *
 from API import *
 from Component import *
 
+def get_padded_image(img_gray, box, epsilon_w, epsilon_h):
+    x_start, x_end = box[0] - epsilon_w, box[0] + box[2] + epsilon_w
+    y_start, y_end = box[1] - epsilon_h, box[1] + box[3] + epsilon_h
+
+    top = min(y_start, 0)
+    left = min(x_start, 0)
+    bottom = min(img_gray.shape[0] - y_end, 0)
+    right = min(img_gray.shape[1] - x_end, 0)
+    img_padded = cv2.copyMakeBorder(img_gray, abs(top), abs(bottom), abs(left), abs(right), cv2.BORDER_CONSTANT, value=0)
+
+    return img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right
+
+def process_roi(img_padded, template_gray, method, sub_angle, threshold,
+                box, epsilon_w, epsilon_h,
+                top, left, bottom, right,
+                x_start, x_end, y_start, y_end,
+                w_temp, h_temp):
+    
+    roi = img_padded[y_start + abs(top):y_end + abs(top) + abs(bottom),
+                     x_start + abs(left):x_end + abs(left) + abs(right)]
+
+    if roi.shape[0] * roi.shape[1] > w_temp * h_temp * 5:
+        return None
+
+    try:
+        point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
+    except:
+        return None
+
+    if point is None:
+        return None
+
+    point[0], point[1] = point[0] + box[0] - epsilon_w, point[1] + box[1] - epsilon_h
+    if (point[0] < 0):
+        point[5] = point[5] - abs(point[0])
+        point[0] = 0
+    if (point[1] < 0):
+        point[6] = point[6] - abs(point[1])
+        point[1] = 0
+
+    return point
+
+
 @app.route('/my_cvu_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')
 def pattern_matching():
     if request.method == 'POST':
         api_folder = request.form.get('api_folder')
         api_folder = api_folder.replace('\\', '/')
-        print(api_folder)
 
         if platform == "linux" or platform == "linux2":
             if api_folder.startswith('//wsl.localhost/'):
@@ -24,13 +66,17 @@ def pattern_matching():
         if api_folder is not None:
             os.chdir(api_folder)
 
-        img_path = request.form.get('img_path')
-        img_path = img_path.replace('\\', '/')
-        bgr_img = cv2.imread(img_path)
+        try:
+            img_path = request.form.get('img_path')
+            img_path = img_path.replace('\\', '/')
+            bgr_img = cv2.imread(img_path)
 
-        template_path = request.form.get('template_path')
-        template_path = template_path.replace('\\', '/')
-        bgr_template = cv2.imread(template_path)
+            template_path = request.form.get('template_path')
+            template_path = template_path.replace('\\', '/')
+            bgr_template = cv2.imread(template_path)
+
+        except FileNotFoundError:
+            print("Invalid image paths")
 
         enhance_path = request.form.get('enhance')
         with open(enhance_path, 'r') as f:
@@ -40,11 +86,17 @@ def pattern_matching():
         with open(representation_path, 'r') as f:
             representation_algorithms = json.load(f)
 
-        threshold = float(request.form.get('threshold'))
-        overlap = float(request.form.get('overlap'))
+        try:
+            threshold = float(request.form.get('threshold'))
+            overlap = float(request.form.get('overlap'))
+            min_modify = int(request.form.get('min_modify'))
+            max_modify = int(request.form.get('max_modify'))
+
+        except ValueError:
+            print("Invalid input values")
+
         method = request.form.get('method')
-        min_modify = int(request.form.get('min_modify'))
-        max_modify = int(request.form.get('max_modify'))
+        
         modify_angle = np.arange(min_modify, max_modify, 1)
 
         output_folder = request.form.get('output_folder')
@@ -56,46 +108,25 @@ def pattern_matching():
         img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
 
         good_points = []
+
         for box, angle in boxes:
             for next_angle in angle:
                 sub_angles = next_angle + modify_angle
+                
                 for sub_angle in sub_angles:
                     _, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
-                    epsilon_w, epsilon_h = np.abs([box[2]-w_temp, box[3]-h_temp])
+                    epsilon_w, epsilon_h = np.abs([box[2] - w_temp, box[3] - h_temp])
 
-                    x_start, x_end = box[0]-epsilon_w, box[0]+box[2]+epsilon_w
-                    y_start, y_end = box[1]-epsilon_h, box[1]+box[3]+epsilon_h
+                    img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
 
-                    top = min(y_start, 0)
-                    left = min(x_start, 0)
-                    bottom = min(img_gray.shape[0]-y_end, 0)
-                    right = min(img_gray.shape[1]-x_end, 0)
-                    img_padded = cv2.copyMakeBorder(img_gray, abs(top), abs(bottom), abs(left), abs(right), cv2.BORDER_CONSTANT, value=0)
+                    point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
+                                        box, epsilon_w, epsilon_h, 
+                                        top, left, bottom, right, 
+                                        x_start, x_end, y_start, y_end, 
+                                        w_temp, h_temp)
 
-                    roi = img_padded[y_start+abs(top):y_end+abs(top)+abs(bottom),
-                                    x_start+abs(left):x_end+abs(left)+abs(right)]    
-
-                    if roi.shape[0]*roi.shape[1] > w_temp*h_temp*5:
-                        continue
-
-                    try:
-                        point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
-                        # print(f'Point: {point}')
-                    except:
-                        continue
-
-                    if point is None:
-                        continue
-
-                    point[0], point[1] = point[0]+box[0]-epsilon_w, point[1]+box[1]-epsilon_h
-                    if (point[0] < 0):
-                        point[5] = point[5] - abs(point[0])
-                        point[0] = 0
-                    if (point[1] < 0):
-                        point[6] = point[6] - abs(point[1])
-                        point[1] = 0
-
-                    good_points.append(point)
+                    if point is not None:
+                        good_points.append(point)
 
         try:
             good_points = non_max_suppression_fast(good_points, overlap)
