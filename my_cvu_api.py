@@ -152,8 +152,9 @@ def pattern_matching():
         
         copy_of_good_points = deepcopy(good_points)
 
-        realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.05)
-        send_data(realistic_points, '127.0.0.1', 5002)
+        realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.01)
+        
+        send_data(realistic_points, '127.0.0.1', 5003)
         
         export_csv(realistic_points, output_folder)
 
@@ -170,4 +171,4 @@ def pattern_matching():
         return 'Done\n'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

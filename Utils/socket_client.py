@@ -1,27 +1,21 @@
 import socket
-import pickle
 import numpy as np
 
 def send_data(points, ip_address, port):
+    # Convert the array to float32
+    points = points.astype(np.float32)
     
-    array_bytes = pickle.dumps(points)
+    # Convert the float32 array to bytes
+    array_bytes = points.tobytes()
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         # Connect to the server
         s.connect((ip_address, port))
 
-        # Send the array bytes through the socket in chunks
-        chunk_size = 4096
-        bytes_sent = 0
-        while bytes_sent < len(array_bytes):
-            try:
-                chunk = array_bytes[bytes_sent:bytes_sent + chunk_size]
-                s.sendall(chunk)
-                bytes_sent += len(chunk)
-            except socket.error as e:
-                print('Error sending data:', str(e))
-                break
+        # Send the array bytes through the socket
+        s.sendall(array_bytes)
+        
     except ConnectionRefusedError:
         print('Error: Connection refused. Please ensure the server is running.')
         
@@ -30,5 +24,6 @@ def send_data(points, ip_address, port):
         s.close()
     
 if __name__ == "__main__":
-    points = np.random.randint(0, 255, (4,))
-    send_data(points, '127.0.0.1', 5002)
+    points = np.array([[1.123, 5.0, 3.0, 4.0],
+                       [1.123, 5.0, 3.0, 4.0]], dtype=np.float32)
+    send_data(points, '127.0.0.1', 5003)

@@ -12,6 +12,6 @@ def convert_position(points, pixel_ratio):
     angle = points[:, 2]
     score = points[:, 4] * 100
     
-    realistic_points = np.array(list(zip(center_x, center_y, angle, score)))
+    realistic_points = np.array(list(zip(center_x, center_y, angle, score)), dtype=np.float32)
     
     return realistic_points
