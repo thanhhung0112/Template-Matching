@@ -153,6 +153,7 @@ def pattern_matching():
         copy_of_good_points = deepcopy(good_points)
 
         realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.05)
+        send_data(realistic_points, '127.0.0.1', 5002)
         
         export_csv(realistic_points, output_folder)
 
