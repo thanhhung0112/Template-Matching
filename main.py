@@ -120,7 +120,12 @@ if os.path.isfile('Output/output.jpg') == True:
 if os.path.isfile('Output/result.csv') == True:
     os.remove('Output/result.csv')
 
-export_csv(good_points, 'Output')
+copy_of_good_points = deepcopy(good_points)
+
+realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.05)
+
+export_csv(realistic_points, 'output')
+
 print(f'found {len(good_points)} objects')
 print(f'time proposal: {time_proposal}')
 print(f'time match: {end-start}')
