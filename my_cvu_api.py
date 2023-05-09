@@ -149,8 +149,12 @@ def pattern_matching():
 
         if len(good_points) == 0:
             return 'No detection found'
+        
+        copy_of_good_points = deepcopy(good_points)
 
-        export_csv(good_points, output_folder)
+        realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.05)
+        
+        export_csv(realistic_points, output_folder)
 
         for point_info in good_points:
             point = point_info[0], point_info[1]
