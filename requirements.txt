@@ -5,3 +5,4 @@ pandas
 flask
 flask-cors
 requests
+ultralytics
