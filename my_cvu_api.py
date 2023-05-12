@@ -117,7 +117,7 @@ def pattern_matching():
 
         template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
 
-        boxes, _ = proposal_roi(bgr_img, bgr_template, enhance_algorithms=enhance_algorithms)
+        boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
 
         img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
 
@@ -139,6 +139,7 @@ def pattern_matching():
                                         x_start, x_end, y_start, y_end, 
                                         w_temp, h_temp)
 
+                    print(point)
                     if point is not None:
                         good_points.append(point)
 

@@ -4,6 +4,7 @@ from Component import *
 from time import time
 import argparse
 import os
+from ultralytics import YOLO
 
 descStr = 'computer vision unit'
 parser = argparse.ArgumentParser(description=descStr)
@@ -14,7 +15,7 @@ parser.add_argument('--overlap', dest='overlap', default=0.4, type=float)
 parser.add_argument('--method', dest='method', required=True)
 parser.add_argument('--min_modify', dest='min_modify', default='-1', type=int)
 parser.add_argument('--max_modify', dest='max_modify', default='1', type=int)
-parser.add_argument('--enhance', dest='custom_enhance_algorithms_path', required=True)
+parser.add_argument('--enhance', dest='custom_enhance_algorithms_path', required=False)
 parser.add_argument('--representation', dest='custom_representation', required=True)
 
 args = parser.parse_args()
@@ -32,6 +33,8 @@ custom_representation = args.custom_representation
 # methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
 #             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 
+model = YOLO('Weights/last.pt')
+
 img = cv2.imread(img_path, 1)
 template = cv2.imread(template_path, 1)
 
@@ -44,8 +47,7 @@ start = time()
 
 with open(custom_enhance_algorithms_path, 'r') as file:
         enhance_algorithms = json.load(file)
-boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
-# print(boxes)
+boxes = proposal_roi(img, template, model, 0.25, enhance_algorithms=enhance_algorithms)
 
 img_gray = image_representation(img, target='target_image', representation_algorithms=representation_algorithms)
 
@@ -124,7 +126,7 @@ copy_of_good_points = deepcopy(good_points)
 
 realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.05)
 
-export_csv(realistic_points, 'output')
+export_csv(realistic_points, 'Output')
 
 print(f'found {len(good_points)} objects')
 print(f'time proposal: {time_proposal}')

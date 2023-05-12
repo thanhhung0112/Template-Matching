@@ -4,23 +4,24 @@ import matplotlib.pyplot as plt
 from Utils import *
 import json
 
-def proposal_roi(image, temp, enhance_algorithms=None):
+def proposal_roi(image, temp, model, conf, enhance_algorithms=None):
     if len(image.shape) == 3:
         img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     if len(temp.shape) == 3:
         temp = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
     area_temp = temp.shape[0] * temp.shape[1]
 
-    enhanced_img = image
-    for key, value in enhance_algorithms.items():
-        func = eval(key)
-        enhanced_img = func(enhanced_img, value)
-        # plt.imshow(enhanced_img)
-        # plt.show()
+    labels_img = instance_segment(image, model=model, conf=conf)
+    
+    # for key, value in enhance_algorithms.items():
+    #     func = eval(key)
+    #     labels_img = func(labels_img, value)
+    #     # plt.imshow(labels_img)
+    #     # plt.show()
 
-    enhanced_img = remove_wrong_contours(enhanced_img, area_temp, selection_area=[0.1, 1.5])
+    # labels_img = remove_wrong_contours(labels_img, area_temp, selection_area=[0.1, 1.5])
 
-    _, labels_img = cv2.connectedComponents(enhanced_img)
+    # _, labels_img = cv2.connectedComponents(labels_img)
 
     labels_img = labels_img.reshape(labels_img.shape[0], labels_img.shape[1], 1)
     obj_ids = np.unique(labels_img)
@@ -53,16 +54,4 @@ def proposal_roi(image, temp, enhance_algorithms=None):
     # plt.show()
 
     del labels_img
-    return boxes, enhanced_img
-
-if __name__ == '__main__':
-    img_path = 'Dataset/Src10.bmp'
-    template_path = 'Dataset/Dst10.jpg'
-
-    img = cv2.imread(img_path, 1)
-    template = cv2.imread(template_path, 1)
-
-    with open('Custom_enhance/Src3-5-8-9-10.json', 'r') as file:
-        enhance_algorithms = json.load(file)
-
-    boxes, object_roi = proposal_roi(img, template, enhance_algorithms=enhance_algorithms)
+    return boxes
