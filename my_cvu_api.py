@@ -139,7 +139,6 @@ def pattern_matching():
                                         x_start, x_end, y_start, y_end, 
                                         w_temp, h_temp)
 
-                    print(point)
                     if point is not None:
                         good_points.append(point)
 
