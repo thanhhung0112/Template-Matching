@@ -134,11 +134,44 @@ print(f'time match: {end-start}')
 
 for point_info in good_points:
     point = point_info[0], point_info[1]
+    angle = point_info[2]
     width = point_info[5]
     height = point_info[6]
+    
+    center_x = int(point[0]+width/2)
+    center_y = int(point[1]+height/2)
+    
+    axis_length = 100
+    
+    angle_rad = np.radians(angle)
+    
+    # Calculate the endpoint coordinates for the x-axis line
+    x1 = center_x
+    y1 = center_y
+    x2 = int(center_x + axis_length * np.cos(angle_rad))
+    y2 = int(center_y + axis_length * np.sin(angle_rad))
 
-    cv2.circle(img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
-    cv2.rectangle(img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
+    # Calculate the endpoint coordinates for the y-axis line
+    x3 = center_x
+    y3 = center_y
+    x4 = int(center_x + axis_length * np.sin(angle_rad))
+    y4 = int(center_y - axis_length * np.cos(angle_rad))
+    
+    color_x = (0, 255, 0)
+    color_y = (0, 0, 255)
+    thickness = 3
+    
+    # Draw the x-axis line
+    cv2.line(img, (x1, y1), (x2, y2), color_x, thickness)
+
+    # Draw the y-axis line
+    cv2.line(img, (x3, y3), (x4, y4), color_y, thickness)
+
+    # cv2.circle(img, (int(point[0]+width/2), int(point[1]+height/2)), 3, (0, 0, 255), 7)
+    # cv2.rectangle(img, (int(point[0]), int(point[1])), (int(point[0]+width), int(point[1]+height)), (0, 255, 0), 3)
+
+cv2.line(img, (0, img.shape[0]), (axis_length, img.shape[0]), color_x, thickness)
+cv2.line(img, (0, img.shape[0]), (0, img.shape[0]-axis_length), color_y, thickness)
 
 if not os.path.exists("Output"):
     os.makedirs("Output")
