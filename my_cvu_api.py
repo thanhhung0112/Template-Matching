@@ -2,6 +2,8 @@ from Utils import *
 from API import *
 from Component import *
 
+from time import time
+
 def get_padded_image(img_gray, box, epsilon_w, epsilon_h):
     x_start, x_end = box[0] - epsilon_w, box[0] + box[2] + epsilon_w
     y_start, y_end = box[1] - epsilon_h, box[1] + box[3] + epsilon_h
@@ -48,6 +50,7 @@ def process_roi(img_padded, template_gray, method, sub_angle, threshold,
 @app.route('/my_cvu_api', methods=['POST', 'GET'])
 @cross_origin(origin='*')
 def pattern_matching():
+    start = time()
     if request.method == 'POST':
         api_folder = request.form.get('api_folder')
         api_folder = api_folder.replace('\\', '/')
@@ -197,6 +200,9 @@ def pattern_matching():
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (0, bgr_img.shape[0]-axis_length), color_y, thickness)
         
         cv2.imwrite(path_to_save_image, bgr_img)
+        
+        end = time()
+        print(f'Elapsed time: {end-start}')
 
         return 'Done\n'
 
