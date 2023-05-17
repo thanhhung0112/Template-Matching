@@ -1,0 +1,8 @@
+{
+    "template": {
+        "apply_lab_clahe": {}
+    },
+    "target_image": {
+        "apply_lab_clahe": {}
+    }
+}
