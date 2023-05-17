@@ -28,7 +28,6 @@ def proposal_roi(image, temp, model, conf, enhance_algorithms=None):
     num_objs = len(obj_ids)
 
     boxes = []
-    object_roi = np.zeros_like(img_gray)
     for i in range(1, num_objs):
         binary_mask = np.all(labels_img==obj_ids[i], axis=2)
         binary_mask = binary_mask.astype(np.uint8)
@@ -37,14 +36,9 @@ def proposal_roi(image, temp, model, conf, enhance_algorithms=None):
         del binary_mask
         
         box = cv2.boundingRect(points)
-        rect = cv2.minAreaRect(points)
-        corner = cv2.boxPoints(rect)
-        corner = np.int0(corner)
-        cv2.drawContours(object_roi, [corner], -1, 255, cv2.FILLED)
-
+        angle = apply_min_area(points)
         del points
 
-        angle = rect[2], rect[2]+90, rect[2]+180, rect[2]+270
         boxes.append([box, angle])
 
     # for box, angle in boxes:

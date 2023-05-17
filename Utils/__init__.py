@@ -7,3 +7,4 @@ from .scale_template import *
 from .convert_to_realistic_position import *
 from .socket_client import *
 from .instance_segmentation import *
+from .proposal_angle import *
