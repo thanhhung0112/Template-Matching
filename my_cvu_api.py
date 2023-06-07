@@ -120,7 +120,8 @@ def pattern_matching():
 
         template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
 
-        boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
+        # boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
+        boxes = proposal_box_yolo(bgr_img, model, conf_score=0.8, img_size=650)
 
         img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
 
