@@ -10,4 +10,4 @@ CORS(app)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-model = YOLO('Weights/last.pt')
+model = YOLO('Weights/last2.pt')
