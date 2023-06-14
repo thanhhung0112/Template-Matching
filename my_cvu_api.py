@@ -92,42 +92,44 @@ def pattern_matching():
             bgr_template = cv2.imread(template_path)
 
             if (bgr_img is None) or (bgr_template is None):
+                print("No image founded\n")
                 return "No image founded\n"
 
         except FileNotFoundError:
+            print("Invalid image paths\n")
             return "Invalid image paths\n"
-
-        enhance_path = request.form.get('enhance')
-        with open(enhance_path, 'r') as f:
-            enhance_algorithms = json.load(f)
-        
-        representation_path = request.form.get('representation')
-        with open(representation_path, 'r') as f:
-            representation_algorithms = json.load(f)
 
         try:
             threshold = float(request.form.get('threshold'))
             overlap = float(request.form.get('overlap'))
             min_modify = int(request.form.get('min_modify'))
             max_modify = int(request.form.get('max_modify'))
+            conf_score = float(request.form.get('conf_score'))
+            img_size = int(request.form.get('img_size'))
+            robot_ip = request.form.get('robot_ip')
 
         except ValueError:
+            print("Invalid input values\n")
             return "Invalid input values\n"
 
         method = request.form.get('method')
         
         modify_angle = np.arange(min_modify, max_modify, 1)
 
-        template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
+        # template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
+        template_gray = cv2.cvtColor(bgr_template, cv2.COLOR_BGR2GRAY)
 
         # boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
-        boxes = proposal_box_yolo(bgr_img, model, conf_score=0.8, img_size=650)
+        boxes = proposal_box_yolo(bgr_img, model, conf_score=conf_score, img_size=img_size)
+        # print(boxes) 
 
-        img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
+        # img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
+        img_gray = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
 
         good_points = []
-
         for box, angle in boxes:
+            center_obj = find_center(img_gray, box, gamma=1)
+            # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
             for next_angle in angle:
                 sub_angles = next_angle + modify_angle
                 
@@ -142,34 +144,36 @@ def pattern_matching():
                                         top, left, bottom, right, 
                                         x_start, x_end, y_start, y_end, 
                                         w_temp, h_temp)
-
+                    
                     if point is not None:
-                        good_points.append(point)
+                        good_points.append((point, center_obj))
+            
 
         try:
+            good_points = np.array(good_points, dtype=object)
             good_points = non_max_suppression_fast(good_points, overlap)
         except:
+            print('No detection found')
             return 'No detection found'
 
         if len(good_points) == 0:
+            print('No detection found')
             return 'No detection found'
         
         copy_of_good_points = deepcopy(good_points)
 
         realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.01)
+        print(realistic_points)
         
-        send_data(realistic_points, '127.0.0.1', 5003)
+        send_float_array_data(realistic_points[:, :4], robot_ip, 48952)
         
         export_csv(realistic_points, output_folder)
 
-        for point_info in good_points:
-            point = point_info[0], point_info[1]
+        for point_info, center in good_points:
             angle = point_info[2]
-            width = point_info[5]
-            height = point_info[6]
             
-            center_x = int(point[0]+width/2)
-            center_y = int(point[1]+height/2)
+            center_x, center_y = center
+            center_x, center_y = int(center_x), int(center_y)
             
             axis_length = 100
             
