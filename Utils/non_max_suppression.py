@@ -1,18 +1,19 @@
 import numpy as np
 
 def non_max_suppression_fast(points, overlapThresh):
-    points = np.array(points)
-    if points.dtype.kind == "i":
-        points = points.astype("float")
-
+    box = np.array(points[:, 0])
+    box = np.vstack(box)
+    if box.dtype.kind == "i":
+        box = box.astype("float")
+        
     pick = []
 
-    x1 = points[:, 0]
-    y1 = points[:, 1]
-    x2 = points[:, 0] + points[:, 5]
-    y2 = points[:, 1] + points[:, 6]
+    x1 = box[:, 0]
+    y1 = box[:, 1]
+    x2 = box[:, 0] + box[:, 5]
+    y2 = box[:, 1] + box[:, 6]
 
-    score = points[:, 4]
+    score = box[:, 4]
 
     area = (x2 - x1 + 1) * (y2 - y1 + 1)
     idxs = np.argsort(score)

@@ -54,7 +54,7 @@ def remove_wrong_contours(img, area_temp, selection_area=[0.25, 1.5]):
     binary[np.isin(labels, indices)] = 255
     return binary
 
-@with_params
+# @with_params
 def gamma_correction(img, gamma):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     inv_gamma = 1.0 / gamma
