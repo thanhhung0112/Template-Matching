@@ -6,7 +6,7 @@ class YOLOSegmentation:
         self.model = model
 
     def predict(self, img, conf_score, img_size):
-        pred_img = self.model.predict(source=img, show=False, save=False, conf=conf_score, imgsz=img_size)
+        pred_img = self.model.predict(source=img, show=False, save=True, conf=conf_score, imgsz=img_size)
         # get contour
         segmentation_contour_idx = []
         for seg in pred_img[0].masks.xy:
@@ -57,7 +57,7 @@ def proposal_box_yolo(img, model, conf_score, img_size):
     ys = YOLOSegmentation(model)
     bboxes, class_ids, masks, scores = ys.predict(img, conf_score, img_size)
     obj, _ = ys.filter_boxes(bboxes, class_ids, masks, scores)
-    angles_pred = ys.compute_angle(masks)
+    angles_pred = ys.compute_angle(obj[1])
     new_bboxes = ys.convert_boxes(obj[0])
     return list(zip(new_bboxes, angles_pred))
         
