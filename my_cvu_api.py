@@ -4,6 +4,8 @@ from Component import *
 
 from time import time
 
+logger = logging.getLogger(__name__)
+
 def get_padded_image(img_gray, box, epsilon_w, epsilon_h):
     x_start, x_end = box[0] - epsilon_w, box[0] + box[2] + epsilon_w
     y_start, y_end = box[1] - epsilon_h, box[1] + box[3] + epsilon_h
@@ -48,7 +50,6 @@ def process_roi(img_padded, template_gray, method, sub_angle, threshold,
 
 
 @app.route('/my_cvu_api', methods=['POST', 'GET'])
-@cross_origin(origin='*')
 def pattern_matching():
     start = time()
     if request.method == 'POST':
@@ -68,6 +69,18 @@ def pattern_matching():
 
         if api_folder is not None:
             os.chdir(api_folder)
+        
+        if not os.path.exists('Log'):
+            os.makedirs('Log')
+        
+        logging.basicConfig(level=logging.INFO, 
+                    format='%(name)s - %(levelname)s - %(asctime)s - %(message)s', 
+                    datefmt='%d-%b-%y %H:%M:%S', 
+                    filename='Log/log.txt',
+                    filemode='w')
+        
+        logger.info(f'OS: {platform}\n')
+        logger.info(f'Root folder: {api_folder}\n')
 
         output_folder = request.form.get('output_folder')
         path_to_save_image = os.path.join(output_folder, 'output.jpg')
@@ -81,6 +94,8 @@ def pattern_matching():
                 os.remove(path_to_save_image)
             if os.path.isfile(path_to_save_csv) == True:
                 os.remove(path_to_save_csv)
+                
+        logger.info(f'Output folder: {output_folder}\n')
 
         try:
             img_path = request.form.get('img_path')
@@ -92,12 +107,14 @@ def pattern_matching():
             bgr_template = cv2.imread(template_path)
 
             if (bgr_img is None) or (bgr_template is None):
-                print("No image founded\n")
+                logger.warning("No image founded\n")
                 return "No image founded\n"
 
-        except FileNotFoundError:
-            print("Invalid image paths\n")
-            return "Invalid image paths\n"
+        except Exception as e:
+            logger.error(f'{e}\n')
+            return f'{e}\n'
+        
+        logger.info('Load images successfully\n')
 
         try:
             threshold = float(request.form.get('threshold'))
@@ -108,67 +125,84 @@ def pattern_matching():
             img_size = int(request.form.get('img_size'))
             robot_ip = request.form.get('robot_ip')
 
-        except ValueError:
-            print("Invalid input values\n")
-            return "Invalid input values\n"
+        except Exception as e:
+            logger.error(f'{e}\n')
+            return f'{e}\n'
 
         method = request.form.get('method')
         
+        logger.info(f'''
+                    threshold: {threshold}
+                    overlap: {overlap}
+                    min_modify: {min_modify}
+                    max_modify: {max_modify}
+                    conf_score: {conf_score}
+                    method: {method}
+                    img_size: {img_size}
+                    robot_ip: {robot_ip}\n
+                    ''')
+        
         modify_angle = np.arange(min_modify, max_modify, 1)
 
-        # template_gray = image_representation(bgr_template, target='template', representation_algorithms=representation_algorithms)
         template_gray = cv2.cvtColor(bgr_template, cv2.COLOR_BGR2GRAY)
 
         # boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
-        boxes = proposal_box_yolo(bgr_img, model, conf_score=conf_score, img_size=img_size)
-        # print(boxes) 
+        try:
+            boxes = proposal_box_yolo(bgr_img, model, conf_score=conf_score, img_size=img_size)
+        except Exception as e:
+            logger.error(f'{e}\n')
+            return f'{e}\n'
+            
+        logger.info(f'''
+                    Number of proposal boxes: {len(boxes)}\n
+                    {np.array(boxes, dtype=object)}\n
+                    ''')
 
-        # img_gray = image_representation(bgr_img, target='target_image', representation_algorithms=representation_algorithms)
         img_gray = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
 
         good_points = []
         for box, angle in boxes:
             center_obj = find_center(img_gray, box, gamma=1)
             # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
-            for next_angle in angle:
-                sub_angles = next_angle + modify_angle
-                
-                for sub_angle in sub_angles:
-                    _, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
-                    epsilon_w, epsilon_h = np.abs([box[2] - w_temp, box[3] - h_temp])
-
-                    img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
-
-                    point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
-                                        box, epsilon_w, epsilon_h, 
-                                        top, left, bottom, right, 
-                                        x_start, x_end, y_start, y_end, 
-                                        w_temp, h_temp)
-                    
-                    if point is not None:
-                        good_points.append((point, center_obj))
             
+            sub_angles = angle + modify_angle
+            
+            for sub_angle in sub_angles:
+                _, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
+                epsilon_w, epsilon_h = np.abs([box[2] - w_temp, box[3] - h_temp])
 
+                img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
+
+                point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
+                                    box, epsilon_w, epsilon_h, 
+                                    top, left, bottom, right, 
+                                    x_start, x_end, y_start, y_end, 
+                                    w_temp, h_temp)
+                
+                if point is not None:
+                    good_points.append((point, center_obj))
+           
         try:
             good_points = np.array(good_points, dtype=object)
             good_points = non_max_suppression_fast(good_points, overlap)
         except:
-            print('No detection found')
-            return 'No detection found'
+            logger.warning('No detection found\n')
+            return 'No detection found\n'
 
         if len(good_points) == 0:
-            print('No detection found')
-            return 'No detection found'
+            logger.warning('No detection found\n')
+            return 'No detection found\n'
         
         copy_of_good_points = deepcopy(good_points)
 
         realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.01)
-        print(realistic_points)
+        
+        logger.info(f'Result: \n{realistic_points}\n')
         
         send_float_array_data(realistic_points[:, :4], robot_ip, 48952)
         
         export_csv(realistic_points, output_folder)
-
+        
         for point_info, center in good_points:
             angle = point_info[2]
             
@@ -207,9 +241,9 @@ def pattern_matching():
         cv2.imwrite(path_to_save_image, bgr_img)
         
         end = time()
-        print(f'Elapsed time: {end-start}')
+        logger.info(f'Elapsed time: {end-start}\n')
 
         return 'Done\n'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
