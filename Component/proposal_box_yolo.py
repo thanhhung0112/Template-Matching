@@ -6,59 +6,44 @@ class YOLOSegmentation:
         self.model = model
 
     def predict(self, img, conf_score, img_size):
-        pred_img = self.model.predict(source=img, show=False, save=True, conf=conf_score, imgsz=img_size)
-        # get contour
-        segmentation_contour_idx = []
-        for seg in pred_img[0].masks.xy:
-            segment = np.array(seg, dtype=np.int32)
-            segmentation_contour_idx.append(segment)
+        pred_img = self.model.predict(source=img, show=False, save=False, conf=conf_score, imgsz=img_size)
+        
         # get bounding boxes
         bboxes = np.array(pred_img[0].boxes.xyxy, dtype="int")
+        # get masks
+        masks = np.array(pred_img[0].masks.xy, dtype=object)
         # get class of bboxes
         class_ids = np.array(pred_img[0].boxes.cls, dtype="int")
         # get score of bboxes
         scores = np.array(pred_img[0].boxes.conf, dtype="float").round(2)
-        return bboxes, class_ids, segmentation_contour_idx, scores
+        
+        return bboxes, class_ids, masks, scores
     
     @staticmethod
     def filter_boxes(bboxes, class_ids, masks, scores):
-        bboxes_obj = [bbox for bbox, class_id in zip(bboxes, class_ids) if class_id == 0]
-        masks_obj = [mask for mask, class_id in zip(masks, class_ids) if class_id == 0]
-        scores_obj = [score for score, class_id in zip(scores, class_ids) if class_id == 0]
-
-        bboxes_other_classes = [bbox for bbox, class_id in zip(bboxes, class_ids) if class_id != 0]
-        masks_other_classes = [mask for mask, class_id in zip(masks, class_ids) if class_id != 0]
-        scores_other_classes = [score for score, class_id in zip(scores, class_ids) if class_id != 0]
-        
-        return (bboxes_obj, masks_obj, scores_obj), (bboxes_other_classes, masks_other_classes, scores_other_classes)
+        obj_idx = class_ids == 0
+        obj = bboxes[obj_idx, :], masks[obj_idx], scores[obj_idx]
+        fail_obj = bboxes[~obj_idx, :], masks[~obj_idx], scores[~obj_idx]
+        return obj, fail_obj
     
     @staticmethod
     def compute_angle(masks_obj):
-        angles_pred = []
-        for mask in masks_obj:
-            angle, _ = apply_min_area(mask)
-            angles_pred.append([angle])
-            
+        angles_pred = list(map(lambda x: apply_min_area(x), masks_obj))   
         return angles_pred
     
     @staticmethod
     def convert_boxes(boxes): # xyxy to xywh
-        new_bboxes = []
-        for bbox in boxes:
-            (x1, y1, x2, y2) = bbox
-            w = x2 - x1
-            h = y2 - y1
-            new_bbox = (x1, y1, w, h)
-            new_bboxes.append(new_bbox)
-            
-        return new_bboxes
+        boxes[:, 2], boxes[:, 3] = boxes[:, 2] - boxes[:, 0], boxes[:, 3] - boxes[:, 1]
+        return boxes
     
 def proposal_box_yolo(img, model, conf_score, img_size):
     ys = YOLOSegmentation(model)
+    
     bboxes, class_ids, masks, scores = ys.predict(img, conf_score, img_size)
     obj, _ = ys.filter_boxes(bboxes, class_ids, masks, scores)
     angles_pred = ys.compute_angle(obj[1])
     new_bboxes = ys.convert_boxes(obj[0])
+    
     return list(zip(new_bboxes, angles_pred))
         
             
