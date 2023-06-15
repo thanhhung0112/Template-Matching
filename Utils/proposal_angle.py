@@ -39,4 +39,4 @@ def apply_min_area(contour):
         angle = (180.0 / np.pi)*(np.arccos(np.dot(reference, used_edge) / (np.linalg.norm(reference) * np.linalg.norm(used_edge))))
         angle = (180 - angle)
         
-    return -angle, -(angle+180)
+    return -angle
