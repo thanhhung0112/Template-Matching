@@ -1,6 +1,9 @@
 import socket
 import numpy as np
 import struct
+import logging
+
+logger = logging.getLogger(__name__)
 
 def send_data(points, ip_address, port):
     # Convert the array to float32
@@ -17,8 +20,8 @@ def send_data(points, ip_address, port):
         # Send the array bytes through the socket
         s.sendall(array_bytes)
         
-    except ConnectionRefusedError:
-        print('Error: Connection refused. Please ensure the server is running.')
+    except Exception as e:
+        logger.error(f'{e}\n')
         
     finally:
         # Close the socket connection
@@ -43,10 +46,10 @@ def send_float_array_data(data_array, ip_address, port):
             # print(array_bytes)
             client_socket.sendall(array_bytes)
 
-            print("Data", data, "sent successfully!")
+            logger.info(f"\nData: {data} sent successfully!\n")
 
-    except ConnectionRefusedError:
-        print('Error: Connection refused. Please ensure the server is running.')
+    except Exception as e:
+        logger.error(f'{e}\n')
 
     finally:
         # Close the socket connection
