@@ -1,13 +1,13 @@
 from flask import Flask, request
-from flask_cors import CORS, cross_origin
 
 from sys import platform
 import os
 from ultralytics import YOLO
 
+import logging
+
 app = Flask(__name__)
-CORS(app)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-model = YOLO('Weights/last2.pt')
+model = YOLO('Weights/last2.pt', task='segment')
