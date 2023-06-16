@@ -29,11 +29,9 @@ class Calibration:
             
         transformation_matrix_path = os.path.join(calib_path, "transformation_matrix.npy")
         np.save(transformation_matrix_path, transformation_matrix)
-        
+
     @staticmethod
-    def predict(center_obj, transformation_matrix_path):
-        transformation_matrix = np.load(transformation_matrix_path)
-        
+    def predict(center_obj, transformation_matrix):
         center_points = np.array(center_obj)
         center_points = np.hstack((center_points, np.ones((center_points.shape[0], 1))))
         robot_points = np.dot(transformation_matrix, center_points.T).T
@@ -43,6 +41,11 @@ class Calibration:
     
     
 if __name__ == '__main__':
+    transformation_matrix_path = 'Calib/transformation_matrix.npy'
+    transformation_matrix = np.load(transformation_matrix_path)
     calib = Calibration()
-    transformation_matrix = calib.calibrate_homography()
-    calib.save_transformation_matrix(transformation_matrix)
+    
+    center_obj = np.load('Calib/input_points.npy')
+    
+    center_point_robot = calib.predict(center_obj, transformation_matrix)
+    print(center_point_robot)

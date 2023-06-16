@@ -195,7 +195,7 @@ def pattern_matching():
         
         copy_of_good_points = deepcopy(good_points)
 
-        realistic_points = convert_position(copy_of_good_points, pixel_ratio=0.01)
+        realistic_points = convert_position(copy_of_good_points, transformation_matrix)
         
         logger.info(f'Result: \n{realistic_points}\n')
         
@@ -246,4 +246,4 @@ def pattern_matching():
         return 'Done\n'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)

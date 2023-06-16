@@ -10,7 +10,8 @@ def compute_distance(point1, point2):
 
 def find_center(img, bbox, gamma=0.5):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
-    img_gray_improve = gamma_correction(img_gray, gamma)
+    # img_gray_improve = gamma_correction(img_gray, gamma)
+    img_gray_improve = remove_shadow(img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
 
     (x1, y1, w, h) = bbox
     x2, y2 = x1 + w, y1 + h
@@ -49,7 +50,7 @@ def find_center(img, bbox, gamma=0.5):
     center_c_x, center_c_y = distances_circle[0]["center"]  # center of circle
     
     # find center of object on roi
-    true_center_x, true_center_y = (0.25*center_e_x+0.75*center_c_x), (0.25*center_e_y+0.75*center_c_y)
+    true_center_x, true_center_y = (0.1*center_e_x+0.9*center_c_x), (0.1*center_e_y+0.9*center_c_y)
     center_obj = (true_center_x+x1, true_center_y+y1)
 
     return center_obj

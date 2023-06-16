@@ -54,8 +54,8 @@ def remove_wrong_contours(img, area_temp, selection_area=[0.25, 1.5]):
     binary[np.isin(labels, indices)] = 255
     return binary
 
-# @with_params
-def gamma_correction(img, gamma):
+@with_params
+def gamma_correction(img, gamma=0.8):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255
@@ -63,7 +63,7 @@ def gamma_correction(img, gamma):
     return cv2.LUT(img, table)
 
 @with_params
-def pixel_duplicate(img, ratio):
+def pixel_duplicate(img, ratio=0.75):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     img_float = np.array(img, np.float16)
     enhanced_img = img + ratio*img_float
@@ -72,9 +72,9 @@ def pixel_duplicate(img, ratio):
     return enhanced_img
 
 @with_params
-def remove_shadow(img, blur=21, thresh=220):
+def remove_shadow(img, blur=21, thresh=220, dilate=8):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
-    dilated_img = cv2.dilate(img, np.ones((8, 8), np.uint8)) 
+    dilated_img = cv2.dilate(img, np.ones((dilate, dilate), np.uint8)) 
     bg_img = cv2.GaussianBlur(dilated_img, (blur, blur), -1)
     diff_img = 255 - cv2.absdiff(img, bg_img)
     norm_img = diff_img.copy()
