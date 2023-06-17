@@ -7,16 +7,16 @@ from time import time
 logger = logging.getLogger(__name__)
 
 def get_padded_image(img_gray, box, epsilon_w, epsilon_h):
-    x_start, x_end = box[0] - epsilon_w, box[0] + box[2] + epsilon_w
-    y_start, y_end = box[1] - epsilon_h, box[1] + box[3] + epsilon_h
+        x_start, x_end = box[0] - epsilon_w, box[0] + box[2] + epsilon_w
+        y_start, y_end = box[1] - epsilon_h, box[1] + box[3] + epsilon_h
 
-    top = min(y_start, 0)
-    left = min(x_start, 0)
-    bottom = min(img_gray.shape[0] - y_end, 0)
-    right = min(img_gray.shape[1] - x_end, 0)
-    img_padded = cv2.copyMakeBorder(img_gray, abs(top), abs(bottom), abs(left), abs(right), cv2.BORDER_CONSTANT, value=0)
+        top = min(y_start, 0)
+        left = min(x_start, 0)
+        bottom = min(img_gray.shape[0] - y_end, 0)
+        right = min(img_gray.shape[1] - x_end, 0)
+        img_padded = cv2.copyMakeBorder(img_gray, abs(top), abs(bottom), abs(left), abs(right), cv2.BORDER_CONSTANT, value=0)
 
-    return img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right
+        return img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right
 
 def process_roi(img_padded, template_gray, method, sub_angle, threshold,
                 box, epsilon_w, epsilon_h,
@@ -25,27 +25,42 @@ def process_roi(img_padded, template_gray, method, sub_angle, threshold,
                 w_temp, h_temp):
     
     roi = img_padded[y_start + abs(top):y_end + abs(top) + abs(bottom),
-                     x_start + abs(left):x_end + abs(left) + abs(right)]
+                    x_start + abs(left):x_end + abs(left) + abs(right)]
 
     if roi.shape[0] * roi.shape[1] > w_temp * h_temp * 5:
         return None
 
     try:
         point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
-    except:
+    except Exception as e:
+        logger.error(f'{e}\n')
         return None
 
-    if point is None:
-        return None
+    # if point is None:
+    #     return None
 
-    point[0], point[1] = point[0] + box[0] - epsilon_w, point[1] + box[1] - epsilon_h
-    if (point[0] < 0):
-        point[5] = point[5] - abs(point[0])
-        point[0] = 0
-    if (point[1] < 0):
-        point[6] = point[6] - abs(point[1])
-        point[1] = 0
+    # point[0], point[1] = point[0] + box[0] - epsilon_w, point[1] + box[1] - epsilon_h
+    # if (point[0] < 0):
+    #     point[5] = point[5] - abs(point[0])
+    #     point[0] = 0
+    # if (point[1] < 0):
+    #     point[6] = point[6] - abs(point[1])
+    #     point[1] = 0
 
+    return point
+
+def match_pattern(img_gray, template_gray, box, sub_angle, method, threshold):
+    _, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
+    epsilon_w, epsilon_h = np.abs([box[2] - w_temp, box[3] - h_temp])
+
+    img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
+
+    point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
+                        box, epsilon_w, epsilon_h, 
+                        top, left, bottom, right, 
+                        x_start, x_end, y_start, y_end, 
+                        w_temp, h_temp)
+    
     return point
 
 
@@ -115,7 +130,7 @@ def pattern_matching():
             return f'{e}\n'
         
         logger.info('Load images successfully\n')
-
+        
         try:
             threshold = float(request.form.get('threshold'))
             overlap = float(request.form.get('overlap'))
@@ -142,13 +157,16 @@ def pattern_matching():
                     robot_ip: {robot_ip}\n
                     ''')
         
-        modify_angle = np.arange(min_modify, max_modify, 1)
+        minus_modify_angle = np.arange(-1, min_modify, -1)
+        plus_modify_angle = np.arange(1, max_modify, 1)
 
         template_gray = cv2.cvtColor(bgr_template, cv2.COLOR_BGR2GRAY)
 
-        # boxes = proposal_roi(bgr_img, bgr_template, model, conf=0.25, enhance_algorithms=enhance_algorithms)
         try:
+            s = time()
             boxes = proposal_box_yolo(bgr_img, model, conf_score=conf_score, img_size=img_size)
+            e = time()
+            print(f'time: {e-s}')
         except Exception as e:
             logger.error(f'{e}\n')
             return f'{e}\n'
@@ -165,30 +183,65 @@ def pattern_matching():
             center_obj = find_center(img_gray, box, gamma=1)
             # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
             
-            sub_angles = angle + modify_angle
+            minus_sub_angles = angle + minus_modify_angle
+            plus_sub_angles = angle + plus_modify_angle
+            minus_pointer, minus_check = 0, 0
+            plus_pointer, plus_check = 0, 0
+            sub_minus_points = []
+            sub_plus_points = []
+            sub_good_points = []
             
-            for sub_angle in sub_angles:
-                _, _, w_temp, h_temp = rotate_template(template_gray, sub_angle)
-                epsilon_w, epsilon_h = np.abs([box[2] - w_temp, box[3] - h_temp])
-
-                img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
-
-                point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
-                                    box, epsilon_w, epsilon_h, 
-                                    top, left, bottom, right, 
-                                    x_start, x_end, y_start, y_end, 
-                                    w_temp, h_temp)
+            point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
+            sub_good_points.append(point)
+            
+            while True:
+                if not minus_check:
+                    minus_point = match_pattern(img_gray, template_gray, box, minus_sub_angles[minus_pointer], method, threshold)
+                    if minus_pointer == 0:
+                        minus_check = not (minus_point[4] >= point[4])
+                    else:
+                        minus_check = not (minus_point[4] >= sub_minus_points[-1][4])
+                        
+                    if not minus_check:
+                        sub_minus_points.append(minus_point)
+                        minus_pointer += 1
+                    
+                if not plus_check:
+                    plus_point = match_pattern(img_gray, template_gray, box, plus_sub_angles[plus_pointer], method, threshold)
+                    if plus_pointer == 0:
+                        plus_check = not (plus_point[4] >= point[4])
+                    else:
+                        plus_check = not (plus_point[4] >= sub_plus_points[-1][4])
+                        
+                    if not plus_check:
+                        sub_plus_points.append(plus_point)
+                        plus_pointer += 1
+                        
+                if (minus_check == 1) and (plus_check == 1):
+                    break
+            
+            best_minus_point = sub_minus_points[-1] if len(sub_minus_points) else None
+            best_plus_point = sub_plus_points[-1] if len(sub_plus_points) else None
+            
+            if (best_minus_point is not None) and (best_plus_point is not None):
+                best_point = best_minus_point if best_minus_point[4] > best_plus_point[4] else best_plus_point
+            elif (best_minus_point is None) and (best_plus_point is None):
+                best_point = point
+            else:
+                best_point = best_minus_point if best_minus_point is not None else best_plus_point
                 
-                if point is not None:
-                    good_points.append((point, center_obj))
-           
-        try:
-            good_points = np.array(good_points, dtype=object)
-            good_points = non_max_suppression_fast(good_points, overlap)
-        except:
-            logger.warning('No detection found\n')
-            return 'No detection found\n'
-
+            if point is not None:
+                good_points.append((best_point, center_obj))
+        
+        good_points = np.array(good_points, dtype=object)
+        
+        # try:
+        #     good_points = np.array(good_points, dtype=object)
+        #     good_points = non_max_suppression_fast(good_points, overlap)
+        # except:
+        #     logger.warning('No detection found\n')
+        #     return 'No detection found\n'
+        
         if len(good_points) == 0:
             logger.warning('No detection found\n')
             return 'No detection found\n'
