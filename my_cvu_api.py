@@ -294,6 +294,7 @@ def pattern_matching():
         cv2.imwrite(path_to_save_image, bgr_img)
         
         end = time()
+        print(f'Elapsed time: {end-start}\n')
         logger.info(f'Elapsed time: {end-start}\n')
 
         return 'Done\n'
