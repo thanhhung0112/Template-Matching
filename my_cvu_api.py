@@ -177,10 +177,12 @@ def pattern_matching():
                     ''')
 
         img_gray = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
+        copy_of_img_gray = deepcopy(img_gray)
+        img_gray_improve = remove_shadow(copy_of_img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
 
         good_points = []
         for box, angle in boxes:
-            center_obj = find_center(img_gray, box, gamma=1)
+            center_obj = find_center(img_gray_improve, box)
             # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
             
             minus_sub_angles = angle + minus_modify_angle
@@ -291,7 +293,8 @@ def pattern_matching():
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (axis_length, bgr_img.shape[0]), color_x, thickness)
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (0, bgr_img.shape[0]-axis_length), color_y, thickness)
         
-        cv2.imwrite(path_to_save_image, bgr_img)
+        bgr_img = cv2.pyrDown(bgr_img)
+        cv2.imwrite(path_to_save_image, bgr_img, [cv2.IMWRITE_JPEG_QUALITY, 70])
         
         end = time()
         print(f'Elapsed time: {end-start}\n')

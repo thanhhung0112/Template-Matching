@@ -8,19 +8,14 @@ def compute_distance(point1, point2):
     x2, y2 = point2
     return np.sqrt((x2-x1)**2 + (y2-y1)**2)
 
-def find_center(img, bbox, gamma=0.5):
-    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
-    # img_gray_improve = gamma_correction(img_gray, gamma)
-    img_gray_improve = remove_shadow(img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
-
+def find_center(img_gray, bbox):
     (x1, y1, w, h) = bbox
     x2, y2 = x1 + w, y1 + h
     center_b_x, center_b_y = (x2-x1)/2, (y2-y1)/2  # center of roi 
-    roi_gray = img_gray_improve[y1:y2, x1:x2]
+    roi_gray = img_gray[y1:y2, x1:x2]
     
     # find canny edges
     edges = cv2.Canny(roi_gray, 100, 200)
-    # cv2.imwrite('Log/edges.jpg', edges)
     # find contours from edges
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     
