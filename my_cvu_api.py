@@ -161,6 +161,12 @@ def pattern_matching():
         plus_modify_angle = np.arange(1, max_modify, 1)
 
         template_gray = cv2.cvtColor(bgr_template, cv2.COLOR_BGR2GRAY)
+        
+        copy_of_template_gray = deepcopy(template_gray)
+        copy_of_template_gray = contrast_stretching(copy_of_template_gray, {"low_clip": 10, "high_clip": 90}) #fine tune
+        _, copy_of_template_gray = cv2.threshold(copy_of_template_gray, 160, 255, cv2.THRESH_BINARY_INV) #fine tune
+        
+        intensity_of_template_gray = np.sum(copy_of_template_gray == 0)
 
         try:
             s = time()
@@ -177,12 +183,19 @@ def pattern_matching():
                     ''')
 
         img_gray = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
+        
         copy_of_img_gray = deepcopy(img_gray)
-        img_gray_improve = remove_shadow(copy_of_img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
+        copy_of_img_gray = contrast_stretching(copy_of_img_gray, {"low_clip": 10, "high_clip": 90}) #fine tune
+        _, copy_of_img_gray = cv2.threshold(copy_of_img_gray, 160, 255, cv2.THRESH_BINARY_INV) #fine tune
+        # img_gray_improve = remove_shadow(copy_of_img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
 
         good_points = []
         for box, angle in boxes:
-            center_obj = find_center(img_gray_improve, box)
+            center_obj = find_center(copy_of_img_gray, box)
+            roi_gray = copy_of_img_gray[box[1]-50:box[1]+box[3]+50, box[0]-50:box[0]+box[2]+50]
+            intensity_of_roi_gray = np.sum(roi_gray == 0)
+            possible_grasp_ratio = intensity_of_roi_gray / intensity_of_template_gray
+            
             # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
             
             minus_sub_angles = angle + minus_modify_angle
@@ -231,10 +244,12 @@ def pattern_matching():
                 best_point = point
             else:
                 best_point = best_minus_point if best_minus_point is not None else best_plus_point
-                
+            
             if point is not None:
-                good_points.append((best_point, center_obj))
+                good_points.append((best_point, center_obj, possible_grasp_ratio))
         
+        
+        good_points.sort(key=lambda x: x[2])
         good_points = np.array(good_points, dtype=object)
         
         # try:
@@ -258,7 +273,7 @@ def pattern_matching():
         
         export_csv(realistic_points, output_folder)
         
-        for point_info, center in good_points:
+        for idx, (point_info, center, possible_grasp_ratio) in enumerate(good_points):
             angle = point_info[2]
             
             center_x, center_y = center
@@ -289,6 +304,8 @@ def pattern_matching():
 
             # Draw the y-axis line
             cv2.line(bgr_img, (x3, y3), (x4, y4), color_y, thickness)
+            
+            cv2.putText(bgr_img, str(idx), (center_x+50, center_y+50), cv2.FONT_HERSHEY_SIMPLEX, 3, color_x, thickness)
 
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (axis_length, bgr_img.shape[0]), color_x, thickness)
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (0, bgr_img.shape[0]-axis_length), color_y, thickness)
