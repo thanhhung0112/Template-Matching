@@ -4,8 +4,8 @@ Stream_camera
 .vscode
 Socket
 runs
-# request.sh
+request.sh
 Log
 Dataset
 setup.sh
-# Template
+Template
