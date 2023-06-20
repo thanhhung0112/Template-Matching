@@ -210,7 +210,14 @@ def pattern_matching():
             sub_good_points.append(point)
             
             while True:
-                if not minus_check:
+                if (len(minus_sub_angles) == 0) and (len(plus_sub_angles) == 0):
+                    break
+                elif (len(minus_sub_angles) == 0) or (minus_pointer >= len(minus_sub_angles)):
+                    minus_check = True
+                elif (len(plus_sub_angles) == 0) or (plus_pointer >= len(plus_sub_angles)):
+                    plus_check = True
+                
+                if (not minus_check) and (len(minus_sub_angles) != 0):
                     minus_point = match_pattern(img_gray, template_gray, box, minus_sub_angles[minus_pointer], method, threshold)
                     if minus_pointer == 0:
                         minus_check = not (minus_point[4] >= point[4])
@@ -221,7 +228,7 @@ def pattern_matching():
                         sub_minus_points.append(minus_point)
                         minus_pointer += 1
                     
-                if not plus_check:
+                if (not plus_check) and (len(plus_sub_angles) != 0):
                     plus_point = match_pattern(img_gray, template_gray, box, plus_sub_angles[plus_pointer], method, threshold)
                     if plus_pointer == 0:
                         plus_check = not (plus_point[4] >= point[4])
