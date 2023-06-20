@@ -19,25 +19,17 @@ def get_padded_image(img_gray, box, epsilon_w, epsilon_h):
         return img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right
 
 def process_roi(img_padded, template_gray, method, sub_angle, threshold,
-                box, epsilon_w, epsilon_h,
                 top, left, bottom, right,
-                x_start, x_end, y_start, y_end,
-                w_temp, h_temp):
+                x_start, x_end, y_start, y_end):
     
     roi = img_padded[y_start + abs(top):y_end + abs(top) + abs(bottom),
                     x_start + abs(left):x_end + abs(left) + abs(right)]
-
-    if roi.shape[0] * roi.shape[1] > w_temp * h_temp * 5:
-        return None
 
     try:
         point = match_template(roi, template_gray, method, sub_angle, 100, threshold)
     except Exception as e:
         logger.error(f'{e}\n')
         return None
-
-    # if point is None:
-    #     return None
 
     # point[0], point[1] = point[0] + box[0] - epsilon_w, point[1] + box[1] - epsilon_h
     # if (point[0] < 0):
@@ -56,10 +48,8 @@ def match_pattern(img_gray, template_gray, box, sub_angle, method, threshold):
     img_padded, x_start, x_end, y_start, y_end, top, left, bottom, right = get_padded_image(img_gray, box, epsilon_w, epsilon_h)
 
     point = process_roi(img_padded, template_gray, method, sub_angle, threshold,
-                        box, epsilon_w, epsilon_h, 
                         top, left, bottom, right, 
-                        x_start, x_end, y_start, y_end, 
-                        w_temp, h_temp)
+                        x_start, x_end, y_start, y_end)
     
     return point
 
@@ -115,11 +105,11 @@ def pattern_matching():
         try:
             img_path = request.form.get('img_path')
             img_path = img_path.replace('\\', '/')
-            bgr_img = cv2.imread(img_path)
+            bgr_img, _ = loader.load(img_path)
 
             template_path = request.form.get('template_path')
             template_path = template_path.replace('\\', '/')
-            bgr_template = cv2.imread(template_path)
+            bgr_template, _ = loader.load(template_path)
 
             if (bgr_img is None) or (bgr_template is None):
                 logger.warning("No image founded\n")
@@ -185,18 +175,11 @@ def pattern_matching():
         img_gray = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)
         
         copy_of_img_gray = deepcopy(img_gray)
-        copy_of_img_gray = contrast_stretching(copy_of_img_gray, {"low_clip": 10, "high_clip": 90}) #fine tune
-        _, copy_of_img_gray = cv2.threshold(copy_of_img_gray, 160, 255, cv2.THRESH_BINARY_INV) #fine tune
-        # img_gray_improve = remove_shadow(copy_of_img_gray, {"blur": 15, "thresh": 180, "dilate": 15})
 
+        s = time()
         good_points = []
         for box, angle in boxes:
-            center_obj = find_center(copy_of_img_gray, box)
-            roi_gray = copy_of_img_gray[box[1]-50:box[1]+box[3]+50, box[0]-50:box[0]+box[2]+50]
-            intensity_of_roi_gray = np.sum(roi_gray == 0)
-            possible_grasp_ratio = intensity_of_roi_gray / intensity_of_template_gray
-            
-            # center_obj = box[0] + box[2]//2, box[1] + box[3]//2
+            center_obj, possible_grasp_ratio = find_center(copy_of_img_gray, box, intensity_of_template_gray)
             
             minus_sub_angles = angle + minus_modify_angle
             plus_sub_angles = angle + plus_modify_angle
@@ -204,12 +187,13 @@ def pattern_matching():
             plus_pointer, plus_check = 0, 0
             sub_minus_points = []
             sub_plus_points = []
-            sub_good_points = []
             
             point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
-            sub_good_points.append(point)
             
             while True:
+                if point[4] >= 0.98:
+                    break
+                
                 if (len(minus_sub_angles) == 0) and (len(plus_sub_angles) == 0):
                     break
                 elif (len(minus_sub_angles) == 0) or (minus_pointer >= len(minus_sub_angles)):
@@ -258,6 +242,8 @@ def pattern_matching():
         
         good_points.sort(key=lambda x: x[2])
         good_points = np.array(good_points, dtype=object)
+        e = time()
+        print(f'time: {e-s}')
         
         # try:
         #     good_points = np.array(good_points, dtype=object)

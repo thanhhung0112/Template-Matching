@@ -10,3 +10,4 @@ from .instance_segmentation import *
 from .proposal_angle import *
 from .find_center import *
 from .calibration import *
+from .load_image import *
