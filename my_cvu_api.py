@@ -183,62 +183,56 @@ def pattern_matching():
             
             minus_sub_angles = angle + minus_modify_angle
             plus_sub_angles = angle + plus_modify_angle
-            minus_pointer, minus_check = 0, 0
-            plus_pointer, plus_check = 0, 0
+            minus_length = len(minus_sub_angles)
+            plus_length = len(plus_sub_angles)
+            
+            minus_pointer, minus_check = 0, False
+            plus_pointer, plus_check = 0, False
             sub_minus_points = []
             sub_plus_points = []
             
             point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
             
             while True:
-                if point[4] >= 0.98:
+                if point[4] >= 0.98 or (minus_length == 0 and plus_length == 0):
                     break
-                
-                if (len(minus_sub_angles) == 0) and (len(plus_sub_angles) == 0):
-                    break
-                elif (len(minus_sub_angles) == 0) or (minus_pointer >= len(minus_sub_angles)):
+
+                if minus_length == 0 or minus_pointer >= minus_length:
                     minus_check = True
-                elif (len(plus_sub_angles) == 0) or (plus_pointer >= len(plus_sub_angles)):
+                elif plus_length == 0 or plus_pointer >= plus_length:
                     plus_check = True
-                
-                if (not minus_check) and (len(minus_sub_angles) != 0):
+
+                if not minus_check and minus_length != 0:
                     minus_point = match_pattern(img_gray, template_gray, box, minus_sub_angles[minus_pointer], method, threshold)
-                    if minus_pointer == 0:
-                        minus_check = not (minus_point[4] >= point[4])
-                    else:
-                        minus_check = not (minus_point[4] >= sub_minus_points[-1][4])
-                        
+                    minus_check = minus_point[4] < point[4] if minus_pointer == 0 else minus_point[4] < sub_minus_points[-1][4]
+                    
                     if not minus_check:
                         sub_minus_points.append(minus_point)
                         minus_pointer += 1
-                    
-                if (not plus_check) and (len(plus_sub_angles) != 0):
+                
+                if not plus_check and plus_length != 0:
                     plus_point = match_pattern(img_gray, template_gray, box, plus_sub_angles[plus_pointer], method, threshold)
-                    if plus_pointer == 0:
-                        plus_check = not (plus_point[4] >= point[4])
-                    else:
-                        plus_check = not (plus_point[4] >= sub_plus_points[-1][4])
-                        
+                    plus_check = plus_point[4] < point[4] if plus_pointer == 0 else plus_point[4] < sub_plus_points[-1][4]
+                    
                     if not plus_check:
                         sub_plus_points.append(plus_point)
                         plus_pointer += 1
-                        
-                if (minus_check == 1) and (plus_check == 1):
+                
+                if minus_check and plus_check:
                     break
             
-            best_minus_point = sub_minus_points[-1] if len(sub_minus_points) else None
-            best_plus_point = sub_plus_points[-1] if len(sub_plus_points) else None
+            best_minus_point = sub_minus_points[-1] if sub_minus_points else None
+            best_plus_point = sub_plus_points[-1] if sub_plus_points else None
             
             if (best_minus_point is not None) and (best_plus_point is not None):
                 best_point = best_minus_point if best_minus_point[4] > best_plus_point[4] else best_plus_point
             elif (best_minus_point is None) and (best_plus_point is None):
                 best_point = point
             else:
-                best_point = best_minus_point if best_minus_point is not None else best_plus_point
+                best_point = best_minus_point or best_plus_point
             
-            if point is not None:
+            if point:
                 good_points.append((best_point, center_obj, possible_grasp_ratio))
-        
         
         good_points.sort(key=lambda x: x[2])
         good_points = np.array(good_points, dtype=object)
