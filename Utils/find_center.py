@@ -23,7 +23,7 @@ def find_center(img_gray, bbox, intensity_of_template_gray):
     _, padded_roi_gray = cv2.threshold(padded_roi_gray, 100, 255, cv2.THRESH_BINARY_INV)
     
     intensity_of_roi_gray = np.sum(padded_roi_gray == 0)
-    possible_grasp_ratio = intensity_of_roi_gray / intensity_of_template_gray
+    possible_grasp_ratio = (intensity_of_template_gray / intensity_of_roi_gray) * 100
     
     # find canny edges
     edges = cv2.Canny(roi_gray, 100, 200)

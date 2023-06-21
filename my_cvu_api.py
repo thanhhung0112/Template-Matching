@@ -234,7 +234,7 @@ def pattern_matching():
             if point:
                 good_points.append((best_point, center_obj, possible_grasp_ratio))
         
-        good_points.sort(key=lambda x: x[2])
+        good_points.sort(key=lambda x: x[2], reverse=True)
         good_points = np.array(good_points, dtype=object)
         e = time()
         print(f'time: {e-s}')
