@@ -153,8 +153,9 @@ def pattern_matching():
         template_gray = cv2.cvtColor(bgr_template, cv2.COLOR_BGR2GRAY)
         
         copy_of_template_gray = deepcopy(template_gray)
-        copy_of_template_gray = contrast_stretching(copy_of_template_gray, {"low_clip": 10, "high_clip": 90}) #fine tune
-        _, copy_of_template_gray = cv2.threshold(copy_of_template_gray, 160, 255, cv2.THRESH_BINARY_INV) #fine tune
+        copy_of_template_gray = contrast_stretching(copy_of_template_gray, {"low_clip": 10, "high_clip": 90})
+        _, copy_of_template_gray = cv2.threshold(copy_of_template_gray, 160, 255, cv2.THRESH_BINARY_INV)
+        cv2.imwrite('intensity_template.jpg', copy_of_template_gray)
         
         intensity_of_template_gray = np.sum(copy_of_template_gray == 0)
 
