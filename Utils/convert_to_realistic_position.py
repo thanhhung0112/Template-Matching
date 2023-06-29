@@ -12,6 +12,9 @@ def convert_position(points, transformation_matrix=None):
     center_x, center_y = center_point_robot[:, 0], center_point_robot[:, 1]
     
     angle = -box[:, 2] - 180
+    angle = np.where(angle > 180, angle-360, angle)
+    angle = np.where(angle < -180, angle+360, angle)
+    
     score = box[:, 4] * 100
     
     center_z = np.full((center_x.shape[0]), 97)
