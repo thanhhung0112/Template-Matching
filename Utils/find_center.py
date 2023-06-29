@@ -38,13 +38,13 @@ def find_center(img_gray, bbox, intensity_of_template_gray):
             continue
 
         try:
-            if (cv2.minAreaRect(contour)[1][0] / cv2.minAreaRect(contour)[1][1] > 1.25) or (cv2.minAreaRect(contour)[1][0] / cv2.minAreaRect(contour)[1][1] < 0.75):
+            if (cv2.minAreaRect(contour)[1][0] / cv2.minAreaRect(contour)[1][1] > 1.1) or (cv2.minAreaRect(contour)[1][0] / cv2.minAreaRect(contour)[1][1] < 0.9):
                 continue
         except Exception as e:
             # logger.exception(f'Filter contour: {e}\n')
             continue
 
-        if len(contour) < 50: #fine tune
+        if len(contour) < 100: #fine tune
             continue
         
         # create circle from contour
@@ -57,12 +57,14 @@ def find_center(img_gray, bbox, intensity_of_template_gray):
         centroid = np.mean(distances_circle[0]["contour"], axis=0)
         centroid_x = centroid[0][0]
         centroid_y = centroid[0][1]
+        
+        center_c_x, center_c_y = distances_circle[0]["center"]  # center of circle    
+        true_center_x, true_center_y = (0.5*centroid_x + 0.5*center_c_x), (0.5*centroid_y + 0.5*center_c_y)
+        
     except Exception as e:
         logger.error(f'No contour found\n')
+        true_center_x, true_center_y = w/2, h/2
 
-    center_c_x, center_c_y = distances_circle[0]["center"]  # center of circle    
-    
-    true_center_x, true_center_y = (0.5*centroid_x + 0.5*center_c_x), (0.5*centroid_y + 0.5*center_c_y)
     center_obj = (true_center_x+x1, true_center_y+y1)
 
     return center_obj, possible_grasp_ratio
