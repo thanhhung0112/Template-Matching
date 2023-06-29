@@ -43,17 +43,16 @@ def send_float_array_data(data_array, ip_address, port):
         # Send each float element separately
         for data in data_array:
             array_bytes = struct.pack('!4f', *data)
-            # print(array_bytes)
             client_socket.sendall(array_bytes)
-
-            logger.info(f"\nData: {data} sent successfully!\n")
+            
+        response = client_socket.recv(1)
+        
+        if response[0] == 100:
+            logger.info(f"sent successfully")
+            client_socket.close()
 
     except Exception as e:
         logger.error(f'{e}\n')
-
-    finally:
-        # Close the socket connection
-        client_socket.close()
     
 if __name__ == "__main__":
     points = np.array([[1.123, 5.0, 3.0, 4.0],
