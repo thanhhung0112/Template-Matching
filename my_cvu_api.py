@@ -154,7 +154,7 @@ def pattern_matching():
         
         copy_of_template_gray = deepcopy(template_gray)
         copy_of_template_gray = contrast_stretching(copy_of_template_gray, {"low_clip": 10, "high_clip": 90})
-        _, copy_of_template_gray = cv2.threshold(copy_of_template_gray, 160, 255, cv2.THRESH_BINARY_INV)
+        _, copy_of_template_gray = cv2.threshold(copy_of_template_gray, 100, 255, cv2.THRESH_BINARY_INV)
         cv2.imwrite('intensity_template.jpg', copy_of_template_gray)
         
         intensity_of_template_gray = np.sum(copy_of_template_gray == 0)
@@ -195,7 +195,7 @@ def pattern_matching():
             point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
             
             while True:
-                if point[4] >= 0.98 or (minus_length == 0 and plus_length == 0):
+                if (minus_length == 0 and plus_length == 0):
                     break
 
                 if minus_length == 0 or minus_pointer >= minus_length:
@@ -257,7 +257,10 @@ def pattern_matching():
         
         logger.info(f'Result: \n{realistic_points}\n')
         
+        s = time()
         send_float_array_data(realistic_points[:, :4], robot_ip, 48952)
+        e = time()
+        print(f'time: {e-s}')
         
         export_csv(realistic_points, output_folder)
         
