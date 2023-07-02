@@ -2,30 +2,34 @@ import socket
 import numpy as np
 import struct
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
-def send_data(points, ip_address, port):
-    # Convert the array to float32
-    points = points.astype(np.float32)
+def send_data(data_array, ip_address, port):
+    # Create a TCP socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
-    # Convert the float32 array to bytes
-    array_bytes = points.tobytes()
-    
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         # Connect to the server
-        s.connect((ip_address, port))
-
-        # Send the array bytes through the socket
-        s.sendall(array_bytes)
+        server_address = (ip_address, port)
+        client_socket.connect(server_address)
         
+        num_data = 5
+        byte_value = num_data.to_bytes(1, byteorder='big')
+        client_socket.send(byte_value)
+        
+        # Receive the data array
+        data_bytes = client_socket.recv(16)
+        data_array = struct.unpack('!4f', data_bytes)
+        
+        print(data_array)
+
     except Exception as e:
         logger.error(f'{e}\n')
         
     finally:
-        # Close the socket connection
-        s.close()
+        client_socket.close()
         
 def send_float_array_data(data_array, ip_address, port):
     # Create a TCP socket
@@ -45,19 +49,20 @@ def send_float_array_data(data_array, ip_address, port):
             array_bytes = struct.pack('!4f', *data)
             client_socket.sendall(array_bytes)
             
-        # response = client_socket.recv(1)
+        response = client_socket.recv(1)
         
-        # if response[0] == 100:
-        #     logger.info(f"sent successfully")
-        #     client_socket.close()
+        if response[0] == 100:
+            logger.info(f"sent successfully")
+            client_socket.close()
 
     except Exception as e:
         logger.error(f'{e}\n')
         
-    finally:
-        client_socket.close()
+    # finally:
+    #     client_socket.close()
     
 if __name__ == "__main__":
-    points = np.array([[1.123, 5.0, 3.0, 4.0],
-                       [1.123, 5.0, 3.0, 4.0]], dtype=np.float32)
-    send_data(points, '127.0.0.1', 5003)
+    points = np.random.randint(0, 255, (15, 4)).astype(np.float32)
+    print(points)
+    send_float_array_data(points, '192.168.176.1', 48952)
+    send_data(np.array(points, dtype=np.float32), '192.168.176.1', 48953)

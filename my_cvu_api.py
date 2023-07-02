@@ -31,14 +31,6 @@ def process_roi(img_padded, template_gray, method, sub_angle, threshold,
         logger.error(f'{e}\n')
         return None
 
-    # point[0], point[1] = point[0] + box[0] - epsilon_w, point[1] + box[1] - epsilon_h
-    # if (point[0] < 0):
-    #     point[5] = point[5] - abs(point[0])
-    #     point[0] = 0
-    # if (point[1] < 0):
-    #     point[6] = point[6] - abs(point[1])
-    #     point[1] = 0
-
     return point
 
 def match_pattern(img_gray, template_gray, box, sub_angle, method, threshold):
@@ -195,7 +187,7 @@ def pattern_matching():
             point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
             
             while True:
-                if (minus_length == 0 and plus_length == 0):
+                if (point[4] > 0.98) or (minus_length == 0 and plus_length == 0):
                     break
 
                 if minus_length == 0 or minus_pointer >= minus_length:
@@ -240,13 +232,6 @@ def pattern_matching():
         e = time()
         print(f'time: {e-s}')
         
-        # try:
-        #     good_points = np.array(good_points, dtype=object)
-        #     good_points = non_max_suppression_fast(good_points, overlap)
-        # except:
-        #     logger.warning('No detection found\n')
-        #     return 'No detection found\n'
-        
         if len(good_points) == 0:
             logger.warning('No detection found\n')
             return 'No detection found\n'
@@ -258,7 +243,7 @@ def pattern_matching():
         logger.info(f'Result: \n{realistic_points}\n')
         
         s = time()
-        send_float_array_data(realistic_points[:, :4], robot_ip, 48952)
+        send_float_array_data(realistic_points[:, :4], '192.168.176.1', 48952)
         e = time()
         print(f'time: {e-s}')
         
@@ -301,14 +286,15 @@ def pattern_matching():
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (axis_length, bgr_img.shape[0]), color_x, thickness)
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (0, bgr_img.shape[0]-axis_length), color_y, thickness)
         
-        bgr_img = cv2.pyrDown(bgr_img)
+        bgr_img = cv2.resize(bgr_img, (bgr_img.shape[1]//4, bgr_img.shape[0]//4))
+        
         cv2.imwrite(path_to_save_image, bgr_img, [cv2.IMWRITE_JPEG_QUALITY, 70])
         
         end = time()
         print(f'Elapsed time: {end-start}\n')
         logger.info(f'Elapsed time: {end-start}\n')
 
-        return 'Done\n'
+        return f'{len(realistic_points)}'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
