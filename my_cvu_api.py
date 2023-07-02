@@ -120,7 +120,7 @@ def pattern_matching():
             max_modify = int(request.form.get('max_modify'))
             conf_score = float(request.form.get('conf_score'))
             img_size = int(request.form.get('img_size'))
-            robot_ip = request.form.get('robot_ip')
+            server_ip = request.form.get('server_ip')
 
         except Exception as e:
             logger.error(f'{e}\n')
@@ -136,7 +136,7 @@ def pattern_matching():
                     conf_score: {conf_score}
                     method: {method}
                     img_size: {img_size}
-                    robot_ip: {robot_ip}\n
+                    server_ip: {server_ip}\n
                     ''')
         
         minus_modify_angle = np.arange(-1, min_modify, -1)
@@ -243,7 +243,7 @@ def pattern_matching():
         logger.info(f'Result: \n{realistic_points}\n')
         
         s = time()
-        send_float_array_data(realistic_points[:, :4], '192.168.176.1', 48952)
+        send_float_array_data(realistic_points[:, :4], server_ip, 48952)
         e = time()
         print(f'time: {e-s}')
         
