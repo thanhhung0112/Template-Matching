@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from Utils import *
+import logging
+
+logger = logging.getLogger(__name__)
 
 def match_template(img, template, method, rot, scale, matched_thresh):
     if len(img.shape) == 3:
@@ -27,6 +30,7 @@ def match_template(img, template, method, rot, scale, matched_thresh):
     method = eval(method)
 
     if (img_gray.shape[0] < rotated_template.shape[0]) or (img_gray.shape[1] < rotated_template.shape[1]):
+        logger.warning(f'img_gray shape: {img_gray.shape}, rotated_template shape: {rotated_template.shape}')
         return
     
     # start = time()

@@ -173,6 +173,8 @@ def pattern_matching():
         good_points = []
         for box, angle in boxes:
             center_obj, possible_grasp_ratio = find_center(copy_of_img_gray, box, intensity_of_template_gray)
+            if possible_grasp_ratio < 50:
+                continue
             
             minus_sub_angles = angle + minus_modify_angle
             plus_sub_angles = angle + plus_modify_angle
@@ -185,9 +187,11 @@ def pattern_matching():
             sub_plus_points = []
             
             point = match_pattern(img_gray, template_gray, box, angle, method, threshold)
+            if point is None:
+                continue
             
             while True:
-                if (point[4] > 0.98) or (minus_length == 0 and plus_length == 0):
+                if (minus_length == 0 and plus_length == 0):
                     break
 
                 if minus_length == 0 or minus_pointer >= minus_length:
@@ -197,7 +201,10 @@ def pattern_matching():
 
                 if not minus_check and minus_length != 0:
                     minus_point = match_pattern(img_gray, template_gray, box, minus_sub_angles[minus_pointer], method, threshold)
-                    minus_check = minus_point[4] < point[4] if minus_pointer == 0 else minus_point[4] < sub_minus_points[-1][4]
+                    if minus_point is not None:
+                        minus_check = minus_point[4] < point[4] if minus_pointer == 0 else minus_point[4] < sub_minus_points[-1][4]
+                    else:
+                        minus_check = True
                     
                     if not minus_check:
                         sub_minus_points.append(minus_point)
@@ -205,7 +212,10 @@ def pattern_matching():
                 
                 if not plus_check and plus_length != 0:
                     plus_point = match_pattern(img_gray, template_gray, box, plus_sub_angles[plus_pointer], method, threshold)
-                    plus_check = plus_point[4] < point[4] if plus_pointer == 0 else plus_point[4] < sub_plus_points[-1][4]
+                    if plus_point is not None:
+                        plus_check = plus_point[4] < point[4] if plus_pointer == 0 else plus_point[4] < sub_plus_points[-1][4]
+                    else:
+                        plus_check = True
                     
                     if not plus_check:
                         sub_plus_points.append(plus_point)

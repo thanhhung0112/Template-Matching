@@ -14,6 +14,7 @@ def compute_distance(point1, point2):
 def find_center(img_gray, bbox, intensity_of_template_gray):
     (x1, y1, w, h) = bbox
     x2, y2 = x1 + w, y1 + h
+    center_b_x, center_b_y = (x2-x1)/2, (y2-y1)/2
     
     roi_gray = img_gray[y1:y2, x1:x2]
     padded_roi_gray = img_gray[y1-100:y2+100, x1-100:x2+100]
@@ -49,6 +50,11 @@ def find_center(img_gray, bbox, intensity_of_template_gray):
         
         # create circle from contour
         (center_x_c, center_y_c), radious = cv2.minEnclosingCircle(contour)
+        
+        distance_c = compute_distance((center_b_x, center_b_y), (center_x_c, center_y_c))
+        if distance_c > 25:
+            continue
+        
         distances_circle.append({"center":(center_x_c, center_y_c), "radious":radious, "contour": contour})
     
     distances_circle = sorted(distances_circle, key=lambda x:x["radious"])
