@@ -173,7 +173,7 @@ def pattern_matching():
         good_points = []
         for box, angle in boxes:
             center_obj, possible_grasp_ratio = find_center(copy_of_img_gray, box, intensity_of_template_gray)
-            if possible_grasp_ratio < 50:
+            if possible_grasp_ratio < 40:
                 continue
             
             minus_sub_angles = angle + minus_modify_angle

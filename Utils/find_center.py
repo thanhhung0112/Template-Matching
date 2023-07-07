@@ -17,7 +17,7 @@ def find_center(img_gray, bbox, intensity_of_template_gray):
     center_b_x, center_b_y = (x2-x1)/2, (y2-y1)/2
     
     roi_gray = img_gray[y1:y2, x1:x2]
-    padded_roi_gray = img_gray[y1-100:y2+100, x1-100:x2+100]
+    padded_roi_gray = img_gray[max(y1-100, 0):min(y2+100, img_gray.shape[0]), max(x1-100, 0):min(x2+100, img_gray.shape[1])]
     
     roi_gray, padded_roi_gray = list(map(lambda x: contrast_stretching(x, {"low_clip": 10, "high_clip": 90}), [roi_gray, padded_roi_gray]))
     _, roi_gray = cv2.threshold(roi_gray, 100, 255, cv2.THRESH_BINARY_INV)

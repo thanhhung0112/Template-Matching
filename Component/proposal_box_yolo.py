@@ -6,7 +6,7 @@ class YOLOSegmentation:
         self.model = model
 
     def predict(self, img, conf_score, img_size):
-        pred_img = self.model.predict(source=img, show=False, save=True, conf=conf_score, imgsz=img_size)
+        pred_img = self.model.predict(source=img, show=False, save=False, conf=conf_score, imgsz=img_size)
         
         # get bounding boxes
         bboxes = np.array(pred_img[0].boxes.xyxy, dtype="int")
