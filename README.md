@@ -42,4 +42,4 @@ curl -X POST -H "Content-Type: multipart/form-data" \
 			 -F "server_ip=192.168.0.105"
 			 http://127.0.0.1:5000/my_cvu_api
 ```
-Using `Postman` to send the request to api endpoint instead if you do not want to use command line.
+Using [Postman](https://www.postman.com/downloads/) to send the request to api endpoint instead if you do not want to use command line.
