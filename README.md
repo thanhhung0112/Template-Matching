@@ -1,6 +1,5 @@
-
 ## Introduction
-This repository aims to detect multi same objects in one image for grasping robot
+This repository aims to detect multi same objects in one image for grasping robot using YoloV8 and some traditional techniques in computer vision via OpenCV-Python
 ## Getting Started
 Clone this repository and install all dependencies
 ```bash
@@ -8,15 +7,12 @@ git clone https://github.com/thanhhung0112/Template-Matching.git
 cd Template-Matching
 pip install -r requirements.txt
 ```
-
 ## Usage
 Running the following command line for using api endpoint
 ```bash
 python my_cvu_api.py
 ```
-
 You have to send the `Post` request with key-value pairs to the api endpoint
-
 ```bash
 curl -X POST -H "Content-Type: multipart/form-data" \
 			 -F "api_folder=<path/to/the/folder/which/api/will/run/in/this>" \
@@ -31,7 +27,6 @@ curl -X POST -H "Content-Type: multipart/form-data" \
 			 -F "server_ip=<id address of your computer>"\
 			 http://127.0.0.1:5000/my_cvu_api
 ```
-
 Example 
 ```bash
 curl -X POST -H "Content-Type: multipart/form-data" \
@@ -47,3 +42,4 @@ curl -X POST -H "Content-Type: multipart/form-data" \
 			 -F "server_ip=192.168.0.105"
 			 http://127.0.0.1:5000/my_cvu_api
 ```
+Using `Postman` to send the request to api endpoint instead if you do not want to use command line.
