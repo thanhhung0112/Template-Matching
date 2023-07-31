@@ -21,6 +21,7 @@ def apply_pca(contour):
     return orientation_angle, orientation_angle+180
 
 def apply_min_area(contour):
+    contour = contour.astype(np.float32)
     rotated_rect = cv2.minAreaRect(contour)
     rect_points = cv2.boxPoints(rotated_rect).astype(int)
     

@@ -105,11 +105,11 @@ def pattern_matching():
 
             if (bgr_img is None) or (bgr_template is None):
                 logger.warning("No image founded\n")
-                return "No image founded\n"
+                return f'{0}'
 
         except Exception as e:
             logger.error(f'{e}\n')
-            return f'{e}\n'
+            return f'{0}'
         
         logger.info('Load images successfully\n')
         
@@ -124,7 +124,7 @@ def pattern_matching():
 
         except Exception as e:
             logger.error(f'{e}\n')
-            return f'{e}\n'
+            return f'{0}'
 
         method = request.form.get('method')
         
@@ -158,7 +158,7 @@ def pattern_matching():
             print(f'time: {e-s}')
         except Exception as e:
             logger.error(f'{e}\n')
-            return f'{e}\n'
+            return f'{0}'
             
         logger.info(f'''
                     Number of proposal boxes: {len(boxes)}\n
@@ -244,7 +244,7 @@ def pattern_matching():
         
         if len(good_points) == 0:
             logger.warning('No detection found\n')
-            return 'No detection found\n'
+            return f'{0}'
         
         copy_of_good_points = deepcopy(good_points)
 
@@ -296,7 +296,7 @@ def pattern_matching():
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (axis_length, bgr_img.shape[0]), color_x, thickness)
         cv2.line(bgr_img, (0, bgr_img.shape[0]), (0, bgr_img.shape[0]-axis_length), color_y, thickness)
         
-        bgr_img = cv2.resize(bgr_img, (bgr_img.shape[1]//4, bgr_img.shape[0]//4))
+        bgr_img = cv2.resize(bgr_img, (bgr_img.shape[1]//1, bgr_img.shape[0]//1))
         
         cv2.imwrite(path_to_save_image, bgr_img, [cv2.IMWRITE_JPEG_QUALITY, 70])
         
