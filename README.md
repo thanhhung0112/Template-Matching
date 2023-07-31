@@ -43,3 +43,6 @@ curl -X POST -H "Content-Type: multipart/form-data" \
 			 http://127.0.0.1:5000/my_cvu_api
 ```
 Using [Postman](https://www.postman.com/downloads/) to send the request to api endpoint instead if you do not want to use command line.
+## User Interface
+Using `Winforms application` to create the UI for easily program manipulating
+![UI](https://cdn.discordapp.com/attachments/1132276410388586567/1135437523955503154/winforms_demo.png)
