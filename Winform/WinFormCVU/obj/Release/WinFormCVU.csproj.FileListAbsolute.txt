@@ -1,0 +1,11 @@
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\bin\Release\WinFormCVU.exe.config
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\bin\Release\WinFormCVU.exe
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\bin\Release\WinFormCVU.pdb
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.csproj.AssemblyReference.cache
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.csproj.SuggestedBindingRedirects.cache
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.ComputerVisionUI.resources
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.Properties.Resources.resources
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.csproj.GenerateResource.cache
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.csproj.CoreCompileInputs.cache
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.exe
+F:\code\Capstone\Demo-model-AI\WinForm\WinFormCVU\WinFormCVU\obj\Release\WinFormCVU.pdb
