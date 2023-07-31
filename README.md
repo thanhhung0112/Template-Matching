@@ -46,4 +46,4 @@ Using [Postman](https://www.postman.com/downloads/) to send the request to api e
 ## User Interface
 Using `Winforms application` to create the UI for easily program manipulating
 ![image](https://github.com/thanhhung0112/Template-Matching/assets/79474374/c585cd92-d6a0-4e05-acfb-12f8d77ee73b) 
-You can configure params to send the request to api endpoint at `General Setting` and enter an IP address to `Server IP`
+You can configure params for api endpoint at `General Setting` and enter an IP address to `Server IP`
